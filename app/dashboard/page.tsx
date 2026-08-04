@@ -66,6 +66,12 @@ export default function Dashboard() {
             <p style={{ margin: 0, fontWeight: 'bold', fontSize: '16px', color: '#3a7b3c' }}>BINGO</p>
             <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#888' }}>Check your BINGO card</p>
           </div>
+        </button><button onClick={() => router.push('/appreciations')} style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: 'white', border: 'none', borderRadius: '12px', padding: '20px', cursor: 'pointer', textAlign: 'left', width: '100%', marginTop: '12px' }}>
+          <span style={{ fontSize: '32px' }}>💚</span>
+          <div>
+            <p style={{ margin: 0, fontWeight: 'bold', fontSize: '16px', color: '#3a7b3c' }}>Appreciations</p>
+            <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#888' }}>Recognize your teammates</p>
+          </div>
         </button>
       </div>
     </div>
