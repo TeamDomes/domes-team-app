@@ -39,7 +39,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <div>
             <h1 style={{ color: '#3a7b3c', fontSize: '24px', fontWeight: 'bold', margin: '0 0 4px' }}>Welcome, {displayName}!</h1>
-            <p style={{ color: '#888', fontSize: '14px', margin: 0 }}>{role}{type ? ` Â· ${type}` : ''}</p>
+            <p style={{ color: '#888', fontSize: '14px', margin: 0 }}>{role}{type ? ` · ${type}` : ''}</p>
           </div>
           <button onClick={handleSignOut} style={{ backgroundColor: 'white', color: '#666', border: '1px solid #ddd', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer' }}>Sign Out</button>
         </div>
