@@ -31,6 +31,7 @@ export default function Dashboard() {
     { label: 'Appreciations', href: '/appreciations', emoji: '💚', desc: 'Recognize your teammates' },
     { label: 'Pets', href: '/pets', emoji: '🐾', desc: 'Share photos of your pets' },
     { label: 'Spotted', href: '/spotted', emoji: '👀', desc: 'Spotted any cool products in the wild?' },
+    { label: 'Weekend Recap', href: '/recap', emoji: '🎉', desc: 'Weekly highlights and wins' },
     { label: 'Wall of Love', href: '/wall-of-love', emoji: '⭐', desc: 'Google reviews from happy customers' },
   ]
   return (
