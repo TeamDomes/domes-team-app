@@ -94,6 +94,7 @@ export default function Dashboard() {
     { label: 'Pets', href: '/pets', emoji: '\\uD83D\\uDC3E', desc: 'Share photos of your pets' },
     { label: 'Spotted', href: '/spotted', emoji: '\\uD83D\\uDC40', desc: 'Spotted any cool products in the wild?' },
     { label: 'Weekend Recap', href: '/recap', emoji: '\\uD83C\\uDF89', desc: 'Weekly highlights and wins' },
+    { label: 'Grower of the Week', href: '/grower', emoji: '\\uD83C\\uDF31', desc: 'Learn about the brands we carry' },
     { label: 'Get to Know You', href: '/questionnaire', emoji: '\\uD83E\\uDD14', desc: 'Fill out your fun facts for team trivia' },
     { label: 'Wall of Love', href: '/wall-of-love', emoji: '\\u2B50', desc: 'Google reviews from happy customers' },
   ]
