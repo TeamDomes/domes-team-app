@@ -50,17 +50,15 @@ export default function LoginPage() {
         backgroundColor: 'white', borderRadius: '20px', padding: '48px 40px',
         width: '100%', maxWidth: '400px',
         boxShadow: '0 8px 40px rgba(84,60,45,0.15)', textAlign: 'center',
+        overflow: 'visible',
       }}>
         {/* Logo */}
         <img
-          src="/images/domes-logo.jpg"
-          alt="Domes"
-          style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px', display: 'block' }}
+          src={"/images/domes-logo.png?v=2"}
+          alt="Domes Dispensary"
+          style={{ width: 220, objectFit: 'contain', margin: '0 auto 8px', display: 'block', borderRadius: 0 }}
         />
-        <h1 style={{ fontFamily: 'TAY Bone Quixote, Cooper Black, serif', color: '#3a7b3c', fontSize: '36px', margin: '0 0 4px', letterSpacing: 1 }}>
-          Domes
-        </h1>
-        <p style={{ fontFamily: 'Hanley Script, Cooper Light, serif', color: '#543c2d', fontSize: '18px', margin: '0 0 32px' }}>
+        <p style={{ fontFamily: 'Hanley Script, Cooper Light, serif', color: '#543c2d', fontSize: '20px', margin: '0 0 28px' }}>
           Team App
         </p>
 
