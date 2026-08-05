@@ -1,15 +1,15 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
   const [userEmail, setUserEmail] = useState('')
-  const [teamMember, setTeamMember] = useState<any>(null)
+  const [teamMember, setTeamMember] = useState(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const [triviaQ, setTriviaQ] = useState<any>(null)
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [triviaQ, setTriviaQ] = useState(null)
+  const [selectedAnswer, setSelectedAnswer] = useState(null)
   const [answered, setAnswered] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
   const [alreadyAnswered, setAlreadyAnswered] = useState(false)
@@ -31,20 +31,20 @@ export default function Dashboard() {
     loadUser()
   }, [router])
 
-  async function loadTrivia(memberId: string) {
+  async function loadTrivia(memberId) {
     const today = new Date().toISOString().split('T')[0]
     const { data: allQs } = await supabase.from('trivia_questions').select('*')
     if (!allQs || allQs.length === 0) return
     const { data: myAnswers } = await supabase.from('trivia_answers').select('*').eq('team_member_id', memberId)
-    const answeredIds = new Set((myAnswers || []).map((a: any) => a.question_id))
+    const answeredIds = new Set((myAnswers || []).map(a => a.question_id))
     const stats = {
-      correct: (myAnswers || []).filter((a: any) => a.is_correct).length,
+      correct: (myAnswers || []).filter(a => a.is_correct).length,
       total: (myAnswers || []).length
     }
     setTriviaStats(stats)
-    const todayAnswer = (myAnswers || []).find((a: any) => a.answered_date === today)
+    const todayAnswer = (myAnswers || []).find(a => a.answered_date === today)
     if (todayAnswer) {
-      const q = allQs.find((q: any) => q.id === todayAnswer.question_id)
+      const q = allQs.find(q => q.id === todayAnswer.question_id)
       if (q) {
         setTriviaQ(q)
         setSelectedAnswer(todayAnswer.answer)
@@ -54,13 +54,13 @@ export default function Dashboard() {
       }
       return
     }
-    const unanswered = allQs.filter((q: any) => !answeredIds.has(q.id))
+    const unanswered = allQs.filter(q => !answeredIds.has(q.id))
     const pool = unanswered.length > 0 ? unanswered : allQs
     const dayIndex = Math.floor(Date.now() / 86400000) % pool.length
     setTriviaQ(pool[dayIndex])
   }
 
-  async function handleAnswer(letter: string) {
+  async function handleAnswer(letter) {
     if (answered || !triviaQ || !teamMember) return
     const correct = letter === triviaQ.correct_answer
     setSelectedAnswer(letter)
@@ -92,13 +92,14 @@ export default function Dashboard() {
     { label: 'Pets', href: '/pets', emoji: '\uD83D\uDC3E', desc: 'Share photos of your pets' },
     { label: 'Spotted', href: '/spotted', emoji: '\uD83D\uDC40', desc: 'Spotted any cool products in the wild?' },
     { label: 'Weekend Recap', href: '/recap', emoji: '\uD83C\uDF89', desc: 'Weekly highlights and wins' },
+    { label: 'Get to Know You', href: '/questionnaire', emoji: '\uD83E\uDD14', desc: 'Fill out your fun facts for team trivia' },
     { label: 'Wall of Love', href: '/wall-of-love', emoji: '\u2B50', desc: 'Google reviews from happy customers' },
   ]
 
-  const optionStyle = (letter: string) => {
-    const base: any = {
+  const optionStyle = (letter) => {
+    const base = {
       width: '100%', padding: '10px 14px', border: '2px solid #ddd', borderRadius: 8,
-      background: 'white', cursor: answered ? 'default' : 'pointer', textAlign: 'left' as const,
+      background: 'white', cursor: answered ? 'default' : 'pointer', textAlign: 'left',
       fontSize: 14, display: 'flex', gap: 8, alignItems: 'center',
     }
     if (!answered) return base
@@ -125,7 +126,7 @@ export default function Dashboard() {
               <span style={{ fontSize: 12, opacity: 0.7 }}>{triviaStats.correct}/{triviaStats.total} correct</span>
             </div>
             <p style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.4 }}>{triviaQ.question}</p>
-            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {['A', 'B', 'C', ...(triviaQ.option_d ? ['D'] : [])].map(letter => (
                 <button key={letter} onClick={() => handleAnswer(letter)} disabled={answered} style={optionStyle(letter)}>
                   <span style={{ fontWeight: 'bold', color: '#543c2d' }}>{letter}.</span>
@@ -145,7 +146,7 @@ export default function Dashboard() {
 
         <div style={{ display: 'grid', gap: '12px' }}>
           {navItems.map(item => (
-            <button key={item.href} onClick={() => router.push(item.href)} style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: 'white', border: 'none', borderRadius: '12px', padding: '20px', cursor: 'pointer', textAlign: 'left' as const, width: '100%' }}>
+            <button key={item.href} onClick={() => router.push(item.href)} style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: 'white', border: 'none', borderRadius: '12px', padding: '20px', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
               <span style={{ fontSize: '32px' }}>{item.emoji}</span>
               <div>
                 <p style={{ margin: 0, fontWeight: 'bold', fontSize: '16px', color: '#3a7b3c' }}>{item.label}</p>
