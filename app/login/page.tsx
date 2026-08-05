@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [resetSent, setResetSent] = useState(false)
   const router = useRouter()
 
-  async function handleLogin(e) {
+  async function handleLogin(e: any) {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -26,7 +26,7 @@ export default function LoginPage() {
     }
   }
 
-  async function handleReset(e) {
+  async function handleReset(e: any) {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -38,34 +38,72 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '48px 40px', width: '100%', maxWidth: '400px', boxShadow: '0 4px 24px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-        <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#3a7b3c', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>D</div>
-        <h1 style={{ color: '#3a7b3c', fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px' }}>Domes</h1>
-        <p style={{ color: '#888', fontSize: '14px', margin: '0 0 32px' }}>Team App</p>
+    <div style={{
+      minHeight: '100vh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif',
+      backgroundImage: 'url(/images/DomesMountainsPaleYellow.png)',
+      backgroundPosition: 'bottom center', backgroundRepeat: 'no-repeat',
+      backgroundSize: '100% auto',
+    }}>
+      <div style={{
+        backgroundColor: 'white', borderRadius: '20px', padding: '48px 40px',
+        width: '100%', maxWidth: '400px',
+        boxShadow: '0 8px 40px rgba(84,60,45,0.15)', textAlign: 'center',
+      }}>
+        {/* Logo */}
+        <img
+          src="/images/domes-logo.jpg"
+          alt="Domes"
+          style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px', display: 'block' }}
+        />
+        <h1 style={{ fontFamily: 'TAY Bone Quixote, Cooper Black, serif', color: '#3a7b3c', fontSize: '36px', margin: '0 0 4px', letterSpacing: 1 }}>
+          Domes
+        </h1>
+        <p style={{ fontFamily: 'Hanley Script, Cooper Light, serif', color: '#543c2d', fontSize: '18px', margin: '0 0 32px' }}>
+          Team App
+        </p>
 
         {mode === 'login' ? (
           <form onSubmit={handleLogin}>
-            <input type="email" placeholder="your@domesdispensary.com" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px', marginBottom: '12px', boxSizing: 'border-box' }} />
-            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px', marginBottom: '20px', boxSizing: 'border-box' }} />
+            <input type="email" placeholder="your@domesdispensary.com" value={email} onChange={(e) => setEmail(e.target.value)} required
+              style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', border: '2px solid #e0d9c8', fontSize: '15px', marginBottom: '12px', boxSizing: 'border-box', fontFamily: 'Cooper Light, system-ui, sans-serif', outline: 'none' }} />
+            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required
+              style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', border: '2px solid #e0d9c8', fontSize: '15px', marginBottom: '20px', boxSizing: 'border-box', fontFamily: 'Cooper Light, system-ui, sans-serif', outline: 'none' }} />
             {error && <p style={{ color: '#e74c3c', fontSize: '13px', margin: '0 0 16px' }}>{error}</p>}
-            <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', backgroundColor: '#3a7b3c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>{loading ? 'Signing in...' : 'Sign In'}</button>
-            <button type="button" onClick={() => { setMode('reset'); setError('') }} style={{ background: 'none', border: 'none', color: '#3a7b3c', fontSize: '13px', cursor: 'pointer', marginTop: '16px' }}>Forgot password?</button>
+            <button type="submit" disabled={loading}
+              style={{ width: '100%', padding: '14px', backgroundColor: '#3a7b3c', color: 'white', border: 'none', borderRadius: '10px', fontSize: '16px', fontFamily: 'Cooper Black, serif', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, letterSpacing: 0.5 }}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+            <button type="button" onClick={() => { setMode('reset'); setError('') }}
+              style={{ background: 'none', border: 'none', color: '#3a7b3c', fontSize: '13px', cursor: 'pointer', marginTop: '16px', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>
+              Forgot password?
+            </button>
           </form>
         ) : (
           <form onSubmit={handleReset}>
             {resetSent ? (
               <div>
                 <p style={{ color: '#3a7b3c', fontSize: '14px', lineHeight: '1.5' }}>Check your email for a password reset link.</p>
-                <button type="button" onClick={() => { setMode('login'); setResetSent(false) }} style={{ background: 'none', border: 'none', color: '#3a7b3c', fontSize: '13px', cursor: 'pointer', marginTop: '16px' }}>Back to sign in</button>
+                <button type="button" onClick={() => { setMode('login'); setResetSent(false) }}
+                  style={{ background: 'none', border: 'none', color: '#3a7b3c', fontSize: '13px', cursor: 'pointer', marginTop: '16px', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>
+                  Back to sign in
+                </button>
               </div>
             ) : (
               <div>
-                <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>Enter your email and we will send a reset link.</p>
-                <input type="email" placeholder="your@domesdispensary.com" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '15px', marginBottom: '20px', boxSizing: 'border-box' }} />
+                <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>Enter your email and we{"'"}ll send a reset link.</p>
+                <input type="email" placeholder="your@domesdispensary.com" value={email} onChange={(e) => setEmail(e.target.value)} required
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: '10px', border: '2px solid #e0d9c8', fontSize: '15px', marginBottom: '20px', boxSizing: 'border-box', fontFamily: 'Cooper Light, system-ui, sans-serif' }} />
                 {error && <p style={{ color: '#e74c3c', fontSize: '13px', margin: '0 0 16px' }}>{error}</p>}
-                <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', backgroundColor: '#3a7b3c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>{loading ? 'Sending...' : 'Send Reset Link'}</button>
-                <button type="button" onClick={() => { setMode('login'); setError('') }} style={{ background: 'none', border: 'none', color: '#3a7b3c', fontSize: '13px', cursor: 'pointer', marginTop: '16px' }}>Back to sign in</button>
+                <button type="submit" disabled={loading}
+                  style={{ width: '100%', padding: '14px', backgroundColor: '#3a7b3c', color: 'white', border: 'none', borderRadius: '10px', fontSize: '16px', fontFamily: 'Cooper Black, serif', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+                <button type="button" onClick={() => { setMode('login'); setError('') }}
+                  style={{ background: 'none', border: 'none', color: '#3a7b3c', fontSize: '13px', cursor: 'pointer', marginTop: '16px', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>
+                  Back to sign in
+                </button>
               </div>
             )}
           </form>

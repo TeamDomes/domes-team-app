@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { awardPoints, POINTS } from '@/lib/points'
 
 export default function Dashboard() {
   const [userEmail, setUserEmail] = useState('')
@@ -14,6 +15,8 @@ export default function Dashboard() {
   const [isCorrect, setIsCorrect] = useState(false)
   const [alreadyAnswered, setAlreadyAnswered] = useState(false)
   const [triviaStats, setTriviaStats] = useState({ correct: 0, total: 0 })
+  const [totalPoints, setTotalPoints] = useState(0)
+  const [weekPoints, setWeekPoints] = useState(0)
 
   useEffect(() => {
     async function loadUser() {
@@ -25,11 +28,25 @@ export default function Dashboard() {
         setTeamMember(member)
         if (!member.auth_user_id) { await supabase.from('team').update({ auth_user_id: user.id }).eq('id', member.id) }
         await loadTrivia(member.id)
+        await loadPoints(member.id)
       }
       setLoading(false)
     }
     loadUser()
   }, [router])
+
+  async function loadPoints(memberId) {
+    const { data: allPts } = await supabase.from('points_log').select('points, created_at').eq('team_member_id', memberId)
+    if (!allPts) return
+    const total = allPts.reduce((sum, p) => sum + p.points, 0)
+    setTotalPoints(total)
+    const now = new Date()
+    const monday = new Date(now)
+    monday.setDate(now.getDate() - now.getDay() + 1)
+    monday.setHours(0, 0, 0, 0)
+    const week = allPts.filter(p => new Date(p.created_at) >= monday).reduce((sum, p) => sum + p.points, 0)
+    setWeekPoints(week)
+  }
 
   async function loadTrivia(memberId) {
     const today = new Date().toISOString().split('T')[0]
@@ -77,6 +94,9 @@ export default function Dashboard() {
       correct: prev.correct + (correct ? 1 : 0),
       total: prev.total + 1,
     }))
+    await awardPoints(teamMember.id, correct ? POINTS.TRIVIA_CORRECT : POINTS.TRIVIA_WRONG, correct ? 'trivia_correct' : 'trivia_wrong', triviaQ.id)
+    setWeekPoints(prev => prev + (correct ? POINTS.TRIVIA_CORRECT : POINTS.TRIVIA_WRONG))
+    setTotalPoints(prev => prev + (correct ? POINTS.TRIVIA_CORRECT : POINTS.TRIVIA_WRONG))
   }
 
   const handleSignOut = async () => { await supabase.auth.signOut(); router.push('/login') }
@@ -86,6 +106,10 @@ export default function Dashboard() {
   const displayName = teamMember ? teamMember.full_name : userEmail
   const role = teamMember?.role || 'Admin'
   const type = teamMember?.type || ''
+  const nextTier = totalPoints < 500 ? 500 : totalPoints < 1000 ? 1000 : totalPoints < 1500 ? 1500 : null
+  const tierLabel = totalPoints < 500 ? '$5 Reward' : totalPoints < 1000 ? '$15 Reward' : totalPoints < 1500 ? '$25 Reward' : 'Max Tier!'
+  const progress = nextTier ? Math.min(100, Math.round((totalPoints / nextTier) * 100)) : 100
+
   const navItems = [
     { label: 'BINGO', href: '/bingo', emoji: '\uD83C\uDFAF', desc: 'Check your BINGO card' },
     { label: 'Appreciations', href: '/appreciations', emoji: '\uD83D\uDC9A', desc: 'Recognize your teammates' },
@@ -110,14 +134,50 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-          <div>
-            <h1 style={{ color: '#3a7b3c', fontSize: '24px', fontWeight: 'bold', margin: '0 0 4px' }}>Welcome, {displayName}!</h1>
-            <p style={{ color: '#888', fontSize: '14px', margin: 0 }}>{role}{type ? ` \u00B7 ${type}` : ''}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <img src="/images/domes-logo.jpg" alt="Domes" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
+            <div>
+              <h1 style={{ fontFamily: 'Hanley Script, Cooper Light, serif', color: '#3a7b3c', fontSize: '22px', fontWeight: 'normal', margin: '0 0 2px' }}>Welcome, {displayName}!</h1>
+              <p style={{ color: '#888', fontSize: '13px', margin: 0, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>{role}{type ? ` \u00B7 ${type}` : ''}</p>
+            </div>
           </div>
-          <button onClick={handleSignOut} style={{ backgroundColor: 'white', color: '#666', border: '1px solid #ddd', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer' }}>Sign Out</button>
+          <button onClick={handleSignOut} style={{ backgroundColor: 'white', color: '#666', border: '1px solid #ddd', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Sign Out</button>
+        </div>
+
+        {/* Points Card */}
+        <div style={{ background: 'linear-gradient(135deg, #3a7b3c 0%, #2d5e2f 100%)', borderRadius: 12, padding: 20, marginBottom: 20, color: 'white' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontFamily: 'Cooper Black, serif', fontSize: 18 }}>{'🏆'} My Points</h3>
+            <span style={{ fontSize: 12, opacity: 0.8 }}>This week: +{weekPoints}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 36 }}>{totalPoints}</span>
+            <span style={{ fontSize: 14, opacity: 0.8 }}>points</span>
+          </div>
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
+              <span>Next: {tierLabel}</span>
+              <span>{nextTier ? totalPoints + '/' + nextTier : '\u2B50'}</span>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 20, height: 8, overflow: 'hidden' }}>
+              <div style={{ background: '#ffcb1f', height: '100%', borderRadius: 20, width: progress + '%', transition: 'width 0.5s' }}></div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, fontSize: 11, opacity: 0.7 }}>
+            <span>500 = $5</span>
+            <span>{'\u00B7'}</span>
+            <span>1,000 = $15</span>
+            <span>{'\u00B7'}</span>
+            <span>1,500 = $25</span>
+          </div>
+          {(role === 'Admin') && (
+            <div style={{ marginTop: 10, textAlign: 'right' }}>
+              <a href="/admin/points" style={{ color: '#ffcb1f', fontSize: 12, textDecoration: 'none' }}>View Weekly Report {'\u2192'}</a>
+            </div>
+          )}
         </div>
 
         {triviaQ && (
@@ -135,8 +195,13 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
+            {answered && !alreadyAnswered && (
+              <div style={{ marginTop: 8, textAlign: 'right' }}>
+                <span style={{ fontSize: 12, color: '#ffcb1f' }}>+{isCorrect ? POINTS.TRIVIA_CORRECT : POINTS.TRIVIA_WRONG} points!</span>
+              </div>
+            )}
             {answered && (
-              <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: isCorrect ? 'rgba(58,123,60,0.3)' : 'rgba(211,47,47,0.3)' }}>
+              <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: isCorrect ? 'rgba(58,123,60,0.3)' : 'rgba(211,47,47,0.3)' }}>
                 <p style={{ margin: 0, fontSize: 14 }}>
                   {alreadyAnswered ? 'You already answered today! ' : ''}{isCorrect ? 'Correct!' : 'Not quite!'} {triviaQ.explanation}
                 </p>
@@ -147,11 +212,11 @@ export default function Dashboard() {
 
         <div style={{ display: 'grid', gap: '12px' }}>
           {navItems.map(item => (
-            <button key={item.href} onClick={() => router.push(item.href)} style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: 'white', border: 'none', borderRadius: '12px', padding: '20px', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
+            <button key={item.href} onClick={() => router.push(item.href)} style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: 'white', border: 'none', borderRadius: '12px', padding: '20px', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: '0 2px 8px rgba(84,60,45,0.06)' }}>
               <span style={{ fontSize: '32px' }}>{item.emoji}</span>
               <div>
-                <p style={{ margin: 0, fontWeight: 'bold', fontSize: '16px', color: '#3a7b3c' }}>{item.label}</p>
-                <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#888' }}>{item.desc}</p>
+                <p style={{ margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: '17px', color: '#3a7b3c' }}>{item.label}</p>
+                <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#888', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>{item.desc}</p>
               </div>
             </button>
           ))}

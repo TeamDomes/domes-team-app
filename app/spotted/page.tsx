@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { awardPoints, POINTS } from '@/lib/points'
 
 export default function SpottedPage() {
   const [posts, setPosts] = useState<any[]>([])
@@ -58,6 +59,7 @@ export default function SpottedPage() {
         image_url: imageUrl,
       })
       if (insertError) throw insertError
+      await awardPoints(currentUser.id, POINTS.POST_CREATED, 'spotted_post', fileName)
       setTitle(''); setCaption(''); setFile(null); setShowForm(false)
       loadData()
     } catch (err: any) {
@@ -83,6 +85,7 @@ export default function SpottedPage() {
       comment: text,
     })
     if (error) { alert('Comment failed: ' + error.message); return }
+    await awardPoints(currentUser.id, POINTS.COMMENT_POSTED, 'spotted_comment', postId)
     setCommentText(prev => ({ ...prev, [postId]: '' }))
     loadData()
   }

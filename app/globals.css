@@ -1,27 +1,27 @@
 @font-face {
   font-family: 'Cooper Black';
-  src: url('/fonts/CooperBlkBT-Regular.ttf') format('truetype');
+  src: url('/fonts/Cooper_BT_Font_Family/CooperBlkBT-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Cooper Light';
-  src: url('/fonts/CooperLtBT-Regular.ttf') format('truetype');
+  src: url('/fonts/Cooper_BT_Font_Family/CooperLtBT-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Cooper Light';
-  src: url('/fonts/CooperLtBT-BoldItalic.ttf') format('truetype');
+  src: url('/fonts/Cooper_BT_Font_Family/CooperLtBT-BoldItalic.ttf') format('truetype');
   font-weight: bold;
   font-style: italic;
 }
 
 @font-face {
   font-family: 'Cooper Medium';
-  src: url('/fonts/CooperMdBT-Regular.ttf') format('truetype');
+  src: url('/fonts/Cooper_BT_Font_Family/CooperMdBT-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }

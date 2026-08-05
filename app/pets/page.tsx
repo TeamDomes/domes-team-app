@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { awardPoints, POINTS } from '@/lib/points'
 
 export default function PetsPage() {
   const [posts, setPosts] = useState<any[]>([])
@@ -59,6 +60,7 @@ export default function PetsPage() {
         image_url: imageUrl,
       })
       if (insertError) throw insertError
+      await awardPoints(currentUser.id, POINTS.POST_CREATED, 'pet_post', fileName)
       setPetName(''); setCaption(''); setFile(null); setShowForm(false)
       loadData()
     } catch (err: any) {
@@ -84,6 +86,7 @@ export default function PetsPage() {
       comment: text,
     })
     if (error) { alert('Comment failed: ' + error.message); return }
+    await awardPoints(currentUser.id, POINTS.COMMENT_POSTED, 'pet_comment', postId)
     setCommentText(prev => ({ ...prev, [postId]: '' }))
     loadData()
   }

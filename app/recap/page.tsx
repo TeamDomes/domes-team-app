@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { awardPoints, POINTS } from '@/lib/points'
 
 export default function RecapPage() {
   const [posts, setPosts] = useState<any[]>([])
@@ -92,6 +93,7 @@ export default function RecapPage() {
       comment: text,
     })
     if (error) { alert('Comment failed: ' + error.message); return }
+    await awardPoints(currentUser.id, POINTS.COMMENT_POSTED, 'recap_comment', postId)
     setCommentText(prev => ({ ...prev, [postId]: '' }))
     loadData()
   }

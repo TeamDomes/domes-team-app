@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { awardPoints, POINTS } from '@/lib/points'
 
 const singleQuestions = [
   { key: 'birthplace', label: 'Where were you born?', placeholder: 'City, State or Country' },
@@ -96,6 +97,7 @@ export default function QuestionnairePage() {
         if (error) throw error
       }
       await generateTrivia()
+      await awardPoints(currentUser.id, POINTS.QUESTIONNAIRE_COMPLETE, 'questionnaire', currentUser.id)
       setSaved(true)
     } catch (err: any) {
       alert('Save failed: ' + err.message)

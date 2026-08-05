@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { awardPoints, POINTS } from '@/lib/points'
 
 export default function GrowerQuizPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -162,6 +163,8 @@ export default function GrowerQuizPage() {
     }
     setScore(correct)
     setSubmitted(true)
+    const pts = correct === quiz.length ? POINTS.QUIZ_PERFECT : POINTS.QUIZ_PARTIAL
+    await awardPoints(currentUser.id, pts, correct === quiz.length ? 'quiz_perfect' : 'quiz_partial', brand?.id || 'unknown')
   }
 
   if (loading) return (

@@ -1,6 +1,7 @@
 ﻿'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { awardPoints, POINTS } from '@/lib/points'
 import { useRouter } from 'next/navigation'
 export default function AppreciationsPage() {
   const [appreciations, setAppreciations] = useState<any[]>([])
@@ -37,7 +38,11 @@ export default function AppreciationsPage() {
   const handleSend = async () => {
     if (!toId || !selectedThemeId || !message.trim() || !currentUser) return
     setSending(true)
-    await supabase.from('appreciations').insert({ from_team_member_id: currentUser.id, to_team_member_id: toId, theme_id: selectedThemeId, message: message.trim(), created_at: new Date().toISOString() })
+    const { data: ins } = await supabase.from('appreciations').insert({ from_team_member_id: currentUser.id, to_team_member_id: toId, theme_id: selectedThemeId, message: message.trim(), created_at: new Date().toISOString() }).select().single()
+    if (ins) {
+      await awardPoints(currentUser.id, POINTS.APPRECIATION_GIVEN, 'appreciation_given', ins.id)
+      await awardPoints(toId, POINTS.APPRECIATION_RECEIVED, 'appreciation_received', ins.id)
+    }
     setToId(''); setSelectedThemeId(''); setMessage(''); setShowForm(false); setSending(false); load()
   }
   if (loading) return (<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4' }}><p style={{ color: '#3a7b3c', fontSize: '18px' }}>Loading...</p></div>)
