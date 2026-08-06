@@ -140,7 +140,7 @@ export default function Dashboard() {
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <img src="/images/domes-logo.png" alt="Domes" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
+            <img src="/images/domes-logo.png" alt="Domes" style={{ width: 52, objectFit: 'contain' }} />
             <div>
               <h1 style={{ fontFamily: 'Hanley Script, Cooper Light, serif', color: '#3a7b3c', fontSize: '22px', fontWeight: 'normal', margin: '0 0 2px' }}>Welcome, {displayName}!</h1>
               <p style={{ color: '#888', fontSize: '13px', margin: 0, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>{role}{type ? \` \\u00B7 \${type}\` : ''}</p>
