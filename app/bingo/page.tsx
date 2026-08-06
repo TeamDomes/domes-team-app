@@ -30,11 +30,11 @@ export default function BingoPage() {
   if (loading) return (<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4' }}><p style={{ color: '#3a7b3c', fontSize: '18px' }}>Loading BINGO...</p></div>)
 
   const squareLabels: Record<string, { letter: string; name: string; desc: string }> = {
-    square_b: { letter: 'B', name: 'Big Basket', desc: 'FT: 4+ over $250 / PT: 3+' },
-    square_i: { letter: 'I', name: 'In the Upsell', desc: '8%+ upsell rate' },
-    square_n: { letter: 'N', name: 'Near-Perfect Drawer', desc: 'Manual - marked by admin' },
-    square_g: { letter: 'G', name: 'Got Here On Time', desc: 'Manual - marked by admin' },
-    square_o: { letter: 'O', name: 'Oh Hey Google', desc: 'Named in a Google review' },
+    square_b: { letter: 'B', name: 'Big Basket', desc: 'Ring up 4+ transactions over $250 (PT: 3+)' },
+    square_i: { letter: 'I', name: 'In the Upsell', desc: 'Achieve an 8%+ upsell rate for the week' },
+    square_n: { letter: 'N', name: 'Near-Perfect Drawer', desc: 'Cash drawer is off by less than $1 at close' },
+    square_g: { letter: 'G', name: 'Got Here On Time', desc: 'Clock in on time for every shift that week' },
+    square_o: { letter: 'O', name: 'Oh Hey Google', desc: 'Get mentioned by name in a 5-star Google review' },
   }
 
   return (
@@ -47,8 +47,8 @@ export default function BingoPage() {
           </div>
 <div style={{ display: 'flex', gap: '8px' }}><button onClick={() => router.push('/bingo/admin')} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer', color: '#3a7b3c', fontWeight: 'bold' }}>Admin</button><button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer', color: '#666' }}>← Dashboard</button></div>
         </div>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-          {Object.values(squareLabels).map(sq => (<div key={sq.letter} style={{ fontSize: '13px', color: '#666' }}><span style={{ fontWeight: 'bold', color: '#3a7b3c', marginRight: '4px' }}>{sq.letter}</span>{sq.name}</div>))}
+        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+          {Object.values(squareLabels).map(sq => (<div key={sq.letter}><div style={{ fontSize: '14px', color: '#333', fontWeight: 'bold', marginBottom: '2px' }}><span style={{ color: '#3a7b3c', marginRight: '4px' }}>{sq.letter}</span>{sq.name}</div><div style={{ fontSize: '11px', color: '#888', lineHeight: '1.3' }}>{sq.desc}</div></div>))}
         </div>
         {!cycle && <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '40px', textAlign: 'center' }}><p style={{ color: '#888', fontSize: '16px' }}>No active BINGO cycle right now.</p></div>}
         {squares.length > 0 && (
