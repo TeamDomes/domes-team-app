@@ -288,7 +288,7 @@ export default function Dashboard() {
               <div style={{ width: 130, height: 5, background: 'rgba(0,0,0,0.1)', borderRadius: 4, marginTop: 5 }}>
                 <div style={{ width: progress + '%', height: '100%', background: 'linear-gradient(90deg, #c8a84e, #e0bc50)', borderRadius: 4 }} />
               </div>
-              {(role === 'Admin') && (
+              {(role === 'Admin' || role === 'Lead') && (
                 <div style={{ marginTop: 6 }}>
                   <a href="/admin/points" style={{ color: '#3a7b3c', fontSize: 11, textDecoration: 'none', marginRight: 10 }}>Points Report</a>
                   <a href="/admin/stats-overview" style={{ color: '#3a7b3c', fontSize: 11, textDecoration: 'none' }}>Team Stats</a>

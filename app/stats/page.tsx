@@ -25,7 +25,7 @@ export default function MyStatsPage() {
     })
     setCurrentUser(me)
     setViewingUser(me)
-    const admin = me?.role === 'Admin' || me?.role === 'admin' || (!me?.role && me?.email === 'jennifer@domesdispensary.com') || (!me?.role && me?.email === 'david@domesdispensary.com')
+    const admin = me?.role === 'Admin' || me?.role === 'admin' || me?.role === 'Lead' || (!me?.role && me?.email === 'jennifer@domesdispensary.com') || (!me?.role && me?.email === 'david@domesdispensary.com')
     setIsAdmin(admin)
     if (admin) {
       setTeamMembers((teamData || []).sort((a: any, b: any) => (a.full_name || '').localeCompare(b.full_name || '')))

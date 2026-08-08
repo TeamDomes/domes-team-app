@@ -22,7 +22,7 @@ export default function StatsOverviewPage() {
       if (t.auth_user_id === user.id) me = t
       if (!me && t.email === user.email) me = t
     })
-    setIsAdmin(me?.role === 'Admin')
+    setIsAdmin(me?.role === 'Admin' || me?.role === 'Lead')
 
     const map: Record<string, any> = {}
     ;(teamData || []).forEach((t: any) => { map[t.id] = t })

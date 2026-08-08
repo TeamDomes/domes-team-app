@@ -24,7 +24,7 @@ export default function CatalogImportPage() {
       if (!me && t.email === user.email) me = t
     })
     setCurrentUser(me)
-    setIsAdmin(me?.role === 'Admin')
+    setIsAdmin(me?.role === 'Admin' || me?.role === 'Lead')
 
     const { data: brandsData } = await supabase
       .from('brands')

@@ -26,7 +26,7 @@ export default function PointsReportPage() {
       if (!me && t.email === user.email) me = t
     })
     setCurrentUser(me)
-    setIsAdmin(me?.role === 'Admin')
+    setIsAdmin(me?.role === 'Admin' || me?.role === 'Lead')
 
     // Get this week's Monday
     const now = new Date()

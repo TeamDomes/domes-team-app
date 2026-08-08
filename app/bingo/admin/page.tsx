@@ -76,7 +76,7 @@ export default function BingoAdminPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       const { data: me } = await supabase.from('team').select('role').eq('email', user.email).single()
-      if (!me || me.role !== 'Admin') { router.push('/dashboard'); return }
+      if (!me || (me.role !== 'Admin' && me.role !== 'Lead')) { router.push('/dashboard'); return }
       const { data: cyc } = await supabase.from('bingo_cycles').select('*').eq('status', 'Active').single()
       setCycle(cyc)
       if (!cyc) { setLoading(false); return }
