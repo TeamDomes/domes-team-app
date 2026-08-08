@@ -171,14 +171,21 @@ export default function Dashboard() {
   const handleSignOut = async () => { await supabase.auth.signOut(); router.push('/login') }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a4a3f' }}>
-      <p style={{ color: '#c8a84e', fontSize: 18, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Loading...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: MOODS[currentMood].bg }}>
+      <p style={{ color: MOODS[currentMood].accent, fontSize: 18, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Loading...</p>
     </div>
   )
 
   const displayName = teamMember ? teamMember.full_name.split(' ')[0] : userEmail
   const role = teamMember?.role || 'Admin'
   const type = teamMember?.type || ''
+  const activeMood = MOODS[currentMood]
+  const isHerb = currentMood === 'herb'
+  const headerColor = isHerb ? '#fff' : activeMood.textColor
+  const headerMuted = isHerb ? 'rgba(255,255,255,0.4)' : activeMood.mutedColor
+  const btnBg = isHerb ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+  const btnBorder = isHerb ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'
+  const btnText = isHerb ? 'rgba(255,255,255,0.6)' : activeMood.mutedColor
   const nextTier = totalPoints < 500 ? 500 : totalPoints < 1000 ? 1000 : totalPoints < 1500 ? 1500 : null
   const tierLabel = totalPoints < 500 ? '$5 Reward' : totalPoints < 1000 ? '$15 Reward' : totalPoints < 1500 ? '$25 Reward' : 'Max Tier!'
   const progress = nextTier ? Math.min(100, Math.round((totalPoints / nextTier) * 100)) : 100
@@ -220,20 +227,22 @@ export default function Dashboard() {
       `}</style>
 
       {/* ── Wallpaper background ── */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#2a4a3f' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: activeMood.bg }} />
       <div style={{
         position: 'fixed', inset: 0, zIndex: 1,
-        backgroundImage: 'url(/images/cannabis-botanical.png)',
-        backgroundSize: '340px',
+        backgroundImage: `url(${activeMood.wallpaper})`,
+        backgroundSize: currentMood === 'herb' ? '340px' : '400px',
         backgroundRepeat: 'repeat',
-        opacity: 0.45,
-        filter: 'saturate(1.2) brightness(1.1)',
+        opacity: currentMood === 'herb' ? 0.45 : 0.27,
+        filter: currentMood === 'herb' ? 'saturate(1.2) brightness(1.1)' : undefined,
       }} />
 
-      {/* ── Dome triangles overlay ── */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
-        <DomeTriangles />
-      </div>
+      {/* ── Dome triangles overlay (herb only) ── */}
+      {currentMood === 'herb' && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
+          <DomeTriangles />
+        </div>
+      )}
 
       {/* ── Content ── */}
       <div style={{ position: 'relative', zIndex: 3, padding: 20 }}>
@@ -250,21 +259,21 @@ export default function Dashboard() {
                 <img src="/images/domes-logo.png" alt="Domes" style={{ width: 36, objectFit: 'contain' }} />
               </div>
               <div>
-                <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#fff', fontSize: 22, margin: '0 0 2px', letterSpacing: -0.3 }}>
+                <h1 style={{ fontFamily: 'Cooper Black, serif', color: headerColor, fontSize: 22, margin: '0 0 2px', letterSpacing: -0.3 }}>
                   Welcome, {displayName}
                 </h1>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0 }}>{role}{type ? ` · ${type}` : ''}</p>
+                <p style={{ color: headerMuted, fontSize: 12, margin: 0 }}>{role}{type ? ` · ${type}` : ''}</p>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button onClick={() => setShowMoodPicker(!showMoodPicker)} style={{
-                background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.15)',
-                color: 'rgba(255,255,255,0.6)', padding: '7px 12px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
+                background: btnBg, border: `0.5px solid ${btnBorder}`,
+                color: btnText, padding: '7px 12px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
                 fontFamily: 'Cooper Light, system-ui, sans-serif',
-              }}>{MOODS[currentMood].emoji} Mood</button>
+              }}>{activeMood.emoji} Mood</button>
               <button onClick={handleSignOut} style={{
-                background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.15)',
-                color: 'rgba(255,255,255,0.4)', padding: '7px 16px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
+                background: btnBg, border: `0.5px solid ${btnBorder}`,
+                color: btnText, padding: '7px 16px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
                 fontFamily: 'Cooper Light, system-ui, sans-serif',
               }}>Sign Out</button>
             </div>
@@ -273,11 +282,12 @@ export default function Dashboard() {
           {/* Mood Picker */}
           {showMoodPicker && (
             <div style={{
-              background: 'rgba(20,40,32,0.95)', borderRadius: 14, padding: 20, marginBottom: 16,
+              background: isHerb ? 'rgba(20,40,32,0.95)' : 'rgba(255,255,255,0.95)',
+              borderRadius: 14, padding: 20, marginBottom: 16,
               backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              border: isHerb ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.08)',
             }}>
-              <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: 1.5, textTransform: 'uppercase' as const }}>
+              <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: isHerb ? 'rgba(255,255,255,0.5)' : '#888', letterSpacing: 1.5, textTransform: 'uppercase' as const }}>
                 Current Mood
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>

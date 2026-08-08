@@ -34,7 +34,7 @@ export default function MoodWrapper({ children }: { children: ReactNode }) {
           backgroundImage: `url(${mood.wallpaper})`,
           backgroundSize: '400px',
           backgroundRepeat: 'repeat',
-          opacity: 0.18,
+          opacity: 0.27,
         }} />
       )}
       <div style={{ position: 'relative', zIndex: 1 }}>

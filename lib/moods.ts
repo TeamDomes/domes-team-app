@@ -1,4 +1,4 @@
-export type MoodKey = 'bunny' | 'cat' | 'hound' | 'lion' | 'elephant' | 'owl' | 'aquatic'
+export type MoodKey = 'herb' | 'bunny' | 'cat' | 'hound' | 'lion' | 'elephant' | 'owl' | 'aquatic'
 
 export interface Mood {
   key: MoodKey
@@ -15,6 +15,19 @@ export interface Mood {
 }
 
 export const MOODS: Record<MoodKey, Mood> = {
+  herb: {
+    key: 'herb',
+    label: 'Lovin the Herb',
+    emoji: '\u{1F33F}',
+    tagline: 'The classic Domes vibe',
+    wallpaper: '/images/cannabis-botanical.png',
+    bg: '#2a4a3f',
+    bgGradient: 'linear-gradient(135deg, #2a4a3f 0%, #1e3a30 50%, #2e5244 100%)',
+    textColor: '#ffffff',
+    mutedColor: 'rgba(255,255,255,0.5)',
+    cardBg: 'rgba(255,255,255,0.9)',
+    accent: '#c8a84e',
+  },
   bunny: {
     key: 'bunny',
     label: 'Bunny',
@@ -109,4 +122,4 @@ export const MOODS: Record<MoodKey, Mood> = {
 }
 
 export const MOOD_KEYS = Object.keys(MOODS) as MoodKey[]
-export const DEFAULT_MOOD: MoodKey = 'lion'
+export const DEFAULT_MOOD: MoodKey = 'herb'
