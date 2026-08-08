@@ -362,6 +362,20 @@ export default function MyStatsPage() {
                 unit="%"
                 prevValue={previous ? Number(previous.upsell_pct) : undefined}
               />
+              {latest.total_shifts != null && (
+                <div style={{
+                  background: 'white', borderRadius: 12, padding: 20,
+                  boxShadow: '0 2px 8px rgba(84,60,45,0.06)',
+                }}>
+                  <p style={{ fontSize: 12, color: '#888', margin: '0 0 6px', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>On Time</p>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 28, color: latest.shifts_on_time === latest.total_shifts ? '#3a7b3c' : '#d32f2f' }}>
+                      {latest.shifts_on_time}/{latest.total_shifts}
+                    </span>
+                    <span style={{ fontSize: 13, color: '#888' }}>shifts</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Badges */}
@@ -401,6 +415,7 @@ export default function MyStatsPage() {
                         <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Hours</th>
                         <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Orders</th>
                         <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Upsell %</th>
+                        <th style={{ textAlign: 'center', padding: '8px 10px', color: '#666' }}>On Time</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -426,6 +441,13 @@ export default function MyStatsPage() {
                           </td>
                           <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
                             {Number(s.upsell_pct).toFixed(1)}%
+                          </td>
+                          <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                            {s.total_shifts != null
+                              ? <span style={{ color: s.shifts_on_time === s.total_shifts ? '#3a7b3c' : '#d32f2f', fontWeight: 'bold' }}>
+                                  {s.shifts_on_time}/{s.total_shifts}
+                                </span>
+                              : <span style={{ color: '#ccc' }}>—</span>}
                           </td>
                         </tr>
                       ))}
