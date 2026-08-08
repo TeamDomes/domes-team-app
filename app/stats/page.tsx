@@ -5,6 +5,9 @@ import { supabase } from '@/lib/supabase'
 
 export default function MyStatsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [viewingUser, setViewingUser] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [stats, setStats] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -21,6 +24,12 @@ export default function MyStatsPage() {
       if (!me && t.email === user.email) me = t
     })
     setCurrentUser(me)
+    setViewingUser(me)
+    const admin = me?.role === 'Admin'
+    setIsAdmin(admin)
+    if (admin) {
+      setTeamMembers((teamData || []).sort((a: any, b: any) => (a.full_name || '').localeCompare(b.full_name || '')))
+    }
 
     if (me) {
       const { data: myStats } = await supabase
@@ -32,6 +41,19 @@ export default function MyStatsPage() {
       setStats(myStats || [])
     }
     setLoading(false)
+  }
+
+  async function switchUser(memberId: string) {
+    const member = teamMembers.find((t: any) => t.id === memberId)
+    if (!member) return
+    setViewingUser(member)
+    const { data: memberStats } = await supabase
+      .from('weekly_stats')
+      .select('*')
+      .eq('team_member_id', memberId)
+      .order('week_ending', { ascending: false })
+      .limit(12)
+    setStats(memberStats || [])
   }
 
   if (loading) return (
@@ -78,17 +100,36 @@ export default function MyStatsPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
             <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: '0 0 4px' }}>
-              My Stats
+              {isAdmin && viewingUser?.id !== currentUser?.id ? `${viewingUser?.full_name}'s Stats` : 'My Stats'}
             </h1>
-            {currentUser && (
+            {viewingUser && (
               <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
-                {currentUser.full_name} {'·'} {currentUser.type}
+                {viewingUser.full_name} {'·'} {viewingUser.type}
               </p>
             )}
           </div>
-          <a href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 14 }}>
-            {'<-'} Dashboard
-          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {isAdmin && (
+              <select
+                value={viewingUser?.id || ''}
+                onChange={e => switchUser(e.target.value)}
+                style={{
+                  padding: '8px 12px', borderRadius: 8, border: '2px solid #e0d9c8',
+                  fontSize: 13, fontFamily: 'Cooper Light, system-ui, sans-serif',
+                  background: 'white', color: '#333', cursor: 'pointer',
+                }}
+              >
+                {teamMembers.map((t: any) => (
+                  <option key={t.id} value={t.id}>
+                    {t.full_name}{t.id === currentUser?.id ? ' (you)' : ''} — {t.type}
+                  </option>
+                ))}
+              </select>
+            )}
+            <a href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 14, whiteSpace: 'nowrap' }}>
+              {'<-'} Dashboard
+            </a>
+          </div>
         </div>
 
         {stats.length === 0 ? (
