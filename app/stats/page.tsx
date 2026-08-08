@@ -107,8 +107,8 @@ export default function MyStatsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
               <StatCard
                 label="Average Basket"
-                value={'$' + Number(latest.avg_basket).toFixed(2)}
-                prevValue={previous ? parseFloat('$' + Number(previous.avg_basket).toFixed(2)) : undefined}
+                value={'$' + Number(latest.average_basket).toFixed(2)}
+                prevValue={previous ? parseFloat('$' + Number(previous.average_basket).toFixed(2)) : undefined}
               />
               <StatCard
                 label="Total Net Sales"
@@ -122,9 +122,9 @@ export default function MyStatsPage() {
               />
               <StatCard
                 label="Upsell Rate"
-                value={Number(latest.upsell_rate).toFixed(1)}
+                value={Number(latest.upsell_pct).toFixed(1)}
                 unit="%"
-                prevValue={previous ? Number(previous.upsell_rate) : undefined}
+                prevValue={previous ? Number(previous.upsell_pct) : undefined}
               />
             </div>
 
@@ -172,7 +172,7 @@ export default function MyStatsPage() {
                             {new Date(s.week_ending + 'T12:00:00').toLocaleDateString()}
                           </td>
                           <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
-                            ${Number(s.avg_basket).toFixed(2)}
+                            ${Number(s.average_basket).toFixed(2)}
                           </td>
                           <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
                             ${Number(s.total_net_sales).toLocaleString()}
@@ -181,7 +181,7 @@ export default function MyStatsPage() {
                             {s.total_orders}
                           </td>
                           <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
-                            {Number(s.upsell_rate).toFixed(1)}%
+                            {Number(s.upsell_pct).toFixed(1)}%
                           </td>
                         </tr>
                       ))}

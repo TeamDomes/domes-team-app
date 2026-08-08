@@ -112,7 +112,7 @@ export default function StatsOverviewPage() {
                 <p style={{ fontSize: 12, color: '#888', margin: '0 0 4px' }}>Team Avg Basket</p>
                 <p style={{ fontFamily: 'Cooper Black, serif', fontSize: 24, color: '#3a7b3c', margin: 0 }}>
                   ${weekStats.length > 0
-                    ? (weekStats.reduce((sum, s) => sum + Number(s.avg_basket), 0) / weekStats.length).toFixed(2)
+                    ? (weekStats.reduce((sum, s) => sum + Number(s.average_basket), 0) / weekStats.length).toFixed(2)
                     : '0.00'}
                 </p>
               </div>
@@ -132,7 +132,7 @@ export default function StatsOverviewPage() {
                 <p style={{ fontSize: 12, color: '#888', margin: '0 0 4px' }}>Avg Upsell Rate</p>
                 <p style={{ fontFamily: 'Cooper Black, serif', fontSize: 24, color: '#3a7b3c', margin: 0 }}>
                   {weekStats.length > 0
-                    ? (weekStats.reduce((sum, s) => sum + Number(s.upsell_rate), 0) / weekStats.length).toFixed(1)
+                    ? (weekStats.reduce((sum, s) => sum + Number(s.upsell_pct), 0) / weekStats.length).toFixed(1)
                     : '0.0'}%
                 </p>
               </div>
@@ -163,7 +163,7 @@ export default function StatsOverviewPage() {
                           {member?.role && <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>{member.role}</span>}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', color: '#333' }}>
-                          ${Number(s.avg_basket).toFixed(2)}
+                          ${Number(s.average_basket).toFixed(2)}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', color: '#333' }}>
                           ${Number(s.total_net_sales).toLocaleString()}
@@ -172,7 +172,7 @@ export default function StatsOverviewPage() {
                           {s.total_orders}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', color: '#333' }}>
-                          {Number(s.upsell_rate).toFixed(1)}%
+                          {Number(s.upsell_pct).toFixed(1)}%
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                           {s.was_on_time ? <span style={{ color: '#3a7b3c' }}>{'✅'}</span> : <span style={{ color: '#ccc' }}>{'—'}</span>}

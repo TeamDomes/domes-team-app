@@ -270,11 +270,11 @@ export default function StatsImportPage() {
         const record: any = {
           team_member_id: memberId,
           week_ending: weekEnding,
-          avg_basket: aov.netAOV,
+          average_basket: aov.netAOV,
           total_net_sales: aov.netSales,
           total_orders: aov.orders,
           upsell_transactions: upsell.upsellTx,
-          upsell_rate: upsellRate,
+          upsell_pct: upsellRate,
         }
         if (memberId in onTimeData) record.was_on_time = onTimeData[memberId]
         if (memberId in drawerData) record.drawer_variance = Math.round(drawerData[memberId] * 100) / 100
@@ -486,10 +486,10 @@ export default function StatsImportPage() {
                       {stats.map((s: any) => (
                         <tr key={s.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                           <td style={{ padding: '8px 12px', color: '#333' }}>{teamMap[s.team_member_id]?.full_name || s.team_member_id}</td>
-                          <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>${Number(s.avg_basket).toFixed(2)}</td>
+                          <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>${Number(s.average_basket).toFixed(2)}</td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>${Number(s.total_net_sales).toLocaleString()}</td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>{s.total_orders}</td>
-                          <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>{Number(s.upsell_rate).toFixed(1)}%</td>
+                          <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>{Number(s.upsell_pct).toFixed(1)}%</td>
                           <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                             {s.was_on_time === true ? '✅' : s.was_on_time === false ? '❌' : '—'}
                           </td>
