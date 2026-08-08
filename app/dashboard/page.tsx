@@ -80,9 +80,13 @@ export default function Dashboard() {
   }, [router])
 
   async function loadLeaderboard() {
-    const { data: teamData } = await supabase.from('team').select('id, full_name')
+    const { data: teamData } = await supabase.from('team').select('id, full_name, role')
     const nameMap: Record<string, string> = {}
-    ;(teamData || []).forEach((t: any) => { nameMap[t.id] = t.full_name })
+    const leadIds = new Set<string>()
+    ;(teamData || []).forEach((t: any) => {
+      nameMap[t.id] = t.full_name
+      if (t.role === 'Lead') leadIds.add(t.id)
+    })
     const { data: allStats } = await supabase
       .from('weekly_stats')
       .select('team_member_id, average_basket, total_net_sales, hours_worked, upsell_pct, week_ending')
@@ -90,7 +94,7 @@ export default function Dashboard() {
     if (!allStats || allStats.length === 0) return
     const latestWeek = allStats[0].week_ending
     setLbWeek(latestWeek)
-    const weekStats = allStats.filter((s: any) => s.week_ending === latestWeek)
+    const weekStats = allStats.filter((s: any) => s.week_ending === latestWeek && !leadIds.has(s.team_member_id))
     const metrics: Record<string, { calc: (s: any) => number }> = {
       'Sales / Hour': { calc: s => s.hours_worked ? Number(s.total_net_sales) / Number(s.hours_worked) : 0 },
       'Average Basket': { calc: s => Number(s.average_basket) || 0 },

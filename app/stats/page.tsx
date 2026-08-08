@@ -9,9 +9,12 @@ export default function MyStatsPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [stats, setStats] = useState<any[]>([])
+  const [leadStats, setLeadStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => { loadData() }, [])
+
+  const isLead = (member: any) => member?.role === 'Lead'
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -32,28 +35,76 @@ export default function MyStatsPage() {
     }
 
     if (me) {
-      const { data: myStats } = await supabase
-        .from('weekly_stats')
-        .select('*')
-        .eq('team_member_id', me.id)
-        .order('week_ending', { ascending: false })
-        .limit(12)
-      setStats(myStats || [])
+      await loadMemberStats(me)
     }
     setLoading(false)
+  }
+
+  async function loadMemberStats(member: any) {
+    const { data: memberStats } = await supabase
+      .from('weekly_stats')
+      .select('*')
+      .eq('team_member_id', member.id)
+      .order('week_ending', { ascending: false })
+      .limit(12)
+    setStats(memberStats || [])
+
+    if (isLead(member)) {
+      await loadLeadData(member.id, memberStats || [])
+    } else {
+      setLeadStats(null)
+    }
+  }
+
+  async function loadLeadData(memberId: string, weeklyStats: any[]) {
+    // Count on-time weeks from weekly_stats
+    const onTimeWeeks = weeklyStats.filter((s: any) => s.was_on_time).length
+    const totalWeeks = weeklyStats.length
+
+    // Count Google review mentions
+    const reviewMentions = weeklyStats.filter((s: any) => s.got_named_in_review).length
+
+    // Hours worked this week
+    const latestHours = weeklyStats[0]?.hours_worked ? Number(weeklyStats[0].hours_worked).toFixed(1) : '—'
+
+    // Load appreciations given
+    const { data: given } = await supabase
+      .from('appreciations')
+      .select('id, created_at')
+      .eq('from_team_member_id', memberId)
+    const appreciationsGiven = (given || []).length
+
+    // Appreciations given in last 4 weeks
+    const fourWeeksAgo = new Date()
+    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28)
+    const recentGiven = (given || []).filter((a: any) => new Date(a.created_at) >= fourWeeksAgo).length
+
+    // Load appreciations received
+    const { data: received } = await supabase
+      .from('appreciations')
+      .select('id, created_at')
+      .eq('to_team_member_id', memberId)
+    const appreciationsReceived = (received || []).length
+
+    const recentReceived = (received || []).filter((a: any) => new Date(a.created_at) >= fourWeeksAgo).length
+
+    setLeadStats({
+      onTimeWeeks,
+      totalWeeks,
+      reviewMentions,
+      appreciationsGiven,
+      appreciationsReceived,
+      recentGiven,
+      recentReceived,
+      latestHours,
+    })
   }
 
   async function switchUser(memberId: string) {
     const member = teamMembers.find((t: any) => t.id === memberId)
     if (!member) return
     setViewingUser(member)
-    const { data: memberStats } = await supabase
-      .from('weekly_stats')
-      .select('*')
-      .eq('team_member_id', memberId)
-      .order('week_ending', { ascending: false })
-      .limit(12)
-    setStats(memberStats || [])
+    await loadMemberStats(member)
   }
 
   if (loading) return (
@@ -64,6 +115,7 @@ export default function MyStatsPage() {
 
   const latest = stats[0]
   const previous = stats[1]
+  const viewIsLead = isLead(viewingUser)
 
   function trend(current: number, prev: number | undefined) {
     if (prev === undefined || prev === null) return null
@@ -94,6 +146,125 @@ export default function MyStatsPage() {
     )
   }
 
+  function LeadStatsView() {
+    if (!leadStats) return null
+    const onTimePct = leadStats.totalWeeks > 0
+      ? Math.round((leadStats.onTimeWeeks / leadStats.totalWeeks) * 100)
+      : 0
+
+    return (
+      <>
+        <p style={{ fontSize: 11, color: '#888', margin: '0 0 16px', textTransform: 'uppercase' as const, letterSpacing: 1 }}>
+          Leadership Metrics · Last {leadStats.totalWeeks} weeks
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+          {/* On Time */}
+          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(84,60,45,0.06)' }}>
+            <p style={{ fontSize: 12, color: '#888', margin: '0 0 6px', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>On Time</p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 28, color: '#3a7b3c' }}>
+                {leadStats.onTimeWeeks}/{leadStats.totalWeeks}
+              </span>
+              <span style={{ fontSize: 13, color: '#888' }}>weeks</span>
+            </div>
+            <div style={{ marginTop: 8, height: 6, background: '#e8e0cc', borderRadius: 4 }}>
+              <div style={{ width: onTimePct + '%', height: '100%', background: '#3a7b3c', borderRadius: 4 }} />
+            </div>
+            <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>{onTimePct}% on-time rate</p>
+          </div>
+
+          {/* Hours This Week */}
+          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(84,60,45,0.06)' }}>
+            <p style={{ fontSize: 12, color: '#888', margin: '0 0 6px', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Hours This Week</p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 28, color: '#333' }}>{leadStats.latestHours}</span>
+              <span style={{ fontSize: 13, color: '#888' }}>hrs</span>
+            </div>
+          </div>
+
+          {/* Google Reviews */}
+          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(84,60,45,0.06)' }}>
+            <p style={{ fontSize: 12, color: '#888', margin: '0 0 6px', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Google Review Mentions</p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 28, color: '#c8a84e' }}>{leadStats.reviewMentions}</span>
+              <span style={{ fontSize: 13, color: '#888' }}>times</span>
+            </div>
+            <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>in last {leadStats.totalWeeks} weeks</p>
+          </div>
+        </div>
+
+        {/* Appreciations */}
+        <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(84,60,45,0.06)', marginBottom: 24 }}>
+          <h2 style={{ fontFamily: 'Cooper Black, serif', color: '#543c2d', fontSize: 18, margin: '0 0 16px' }}>
+            Appreciations
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div>
+              <p style={{ fontSize: 12, color: '#888', margin: '0 0 4px' }}>Given</p>
+              <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 28, color: '#f37029' }}>{leadStats.appreciationsGiven}</span>
+              <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>total</span>
+              <p style={{ fontSize: 12, color: '#3a7b3c', margin: '4px 0 0' }}>
+                {leadStats.recentGiven} in last 4 weeks
+              </p>
+            </div>
+            <div>
+              <p style={{ fontSize: 12, color: '#888', margin: '0 0 4px' }}>Received</p>
+              <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 28, color: '#7b5ea7' }}>{leadStats.appreciationsReceived}</span>
+              <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>total</span>
+              <p style={{ fontSize: 12, color: '#3a7b3c', margin: '4px 0 0' }}>
+                {leadStats.recentReceived} in last 4 weeks
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Weekly History — simplified for leads */}
+        {stats.length > 1 && (
+          <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
+            <h2 style={{ fontFamily: 'Cooper Black, serif', color: '#543c2d', fontSize: 18, margin: '0 0 12px' }}>
+              Weekly History
+            </h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #e0d9c8' }}>
+                    <th style={{ textAlign: 'left', padding: '8px 10px', color: '#666' }}>Week</th>
+                    <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Hours</th>
+                    <th style={{ textAlign: 'center', padding: '8px 10px', color: '#666' }}>On Time</th>
+                    <th style={{ textAlign: 'center', padding: '8px 10px', color: '#666' }}>Review Mention</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.map((s: any) => (
+                    <tr key={s.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '8px 10px', color: '#333' }}>
+                        {new Date(s.week_ending + 'T12:00:00').toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
+                        {s.hours_worked ? Number(s.hours_worked).toFixed(1) : '—'}
+                      </td>
+                      <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                        {s.was_on_time
+                          ? <span style={{ color: '#3a7b3c', fontWeight: 'bold' }}>Yes</span>
+                          : <span style={{ color: '#d32f2f' }}>No</span>}
+                      </td>
+                      <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                        {s.got_named_in_review
+                          ? <span style={{ color: '#c8a84e', fontWeight: 'bold' }}>Yes</span>
+                          : <span style={{ color: '#ccc' }}>—</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -104,7 +275,7 @@ export default function MyStatsPage() {
             </h1>
             {viewingUser && (
               <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
-                {viewingUser.full_name} {'·'} {viewingUser.type}
+                {viewingUser.full_name} {'·'} {viewingUser.role === 'Lead' ? 'Team Lead' : viewingUser.type}
               </p>
             )}
           </div>
@@ -121,7 +292,7 @@ export default function MyStatsPage() {
               >
                 {teamMembers.map((t: any) => (
                   <option key={t.id} value={t.id}>
-                    {t.full_name}{t.id === currentUser?.id ? ' (you)' : ''} — {t.type}
+                    {t.full_name}{t.id === currentUser?.id ? ' (you)' : ''} — {t.role === 'Lead' ? 'Lead' : t.type}
                   </option>
                 ))}
               </select>
@@ -136,6 +307,8 @@ export default function MyStatsPage() {
           <div style={{ background: 'white', borderRadius: 12, padding: 40, textAlign: 'center' }}>
             <p style={{ color: '#888', fontSize: 16, margin: 0 }}>No stats available yet. Check back after the weekly import!</p>
           </div>
+        ) : viewIsLead ? (
+          <LeadStatsView />
         ) : (
           <>
             {/* Current Week Stats */}
@@ -186,7 +359,7 @@ export default function MyStatsPage() {
                   background: '#3a7b3c', color: 'white', borderRadius: 20,
                   padding: '8px 16px', fontSize: 13, fontFamily: 'Cooper Black, serif',
                 }}>
-                  {'✅'} On Time
+                  On Time
                 </div>
               )}
               {latest.got_named_in_review && (
@@ -194,7 +367,7 @@ export default function MyStatsPage() {
                   background: '#ffcb1f', color: '#543c2d', borderRadius: 20,
                   padding: '8px 16px', fontSize: 13, fontFamily: 'Cooper Black, serif',
                 }}>
-                  {'⭐'} Google Review Mention
+                  Google Review Mention
                 </div>
               )}
             </div>
