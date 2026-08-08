@@ -197,6 +197,7 @@ export default function StatsImportPage() {
 
       // ── 3. Parse Attendance (optional) ──
       const onTimeData: Record<string, boolean> = {}
+      const shiftCounts: Record<string, { total: number; onTime: number }> = {}
       if (attendanceFile) {
         const attRows = await parseFile(attendanceFile)
         let attHeaderIdx = attRows.findIndex(r => r.some(c => c === 'Name'))
@@ -212,8 +213,12 @@ export default function StatsImportPage() {
           const member = findMember(name, team)
           if (!member) continue
           if (!(member.id in onTimeData)) onTimeData[member.id] = true
+          if (!shiftCounts[member.id]) shiftCounts[member.id] = { total: 0, onTime: 0 }
+          shiftCounts[member.id].total++
           if (type === 'late on clock-in' || type === 'no show on shift') {
             lateMembers.add(member.id)
+          } else {
+            shiftCounts[member.id].onTime++
           }
         }
         for (const id of lateMembers) {
@@ -366,6 +371,10 @@ export default function StatsImportPage() {
           upsell_pct: upsellRate,
         }
         if (memberId in onTimeData) record.was_on_time = onTimeData[memberId]
+        if (shiftCounts[memberId]) {
+          record.shifts_on_time = shiftCounts[memberId].onTime
+          record.total_shifts = shiftCounts[memberId].total
+        }
         // Drawer: null = no data, 0 = passed all days, >0.50 = worst variance
         if (memberId in drawerResults) {
           record.drawer_variance = Math.round(Math.abs(drawerResults[memberId].worstVariance) * 100) / 100

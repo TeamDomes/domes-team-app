@@ -57,9 +57,13 @@ export default function MyStatsPage() {
   }
 
   async function loadLeadData(memberId: string, weeklyStats: any[]) {
-    // Count on-time weeks from weekly_stats
-    const onTimeWeeks = weeklyStats.filter((s: any) => s.was_on_time).length
-    const totalWeeks = weeklyStats.length
+    // Count on-time shifts from weekly_stats
+    const totalShiftsOnTime = weeklyStats.reduce((sum: number, s: any) => sum + (s.shifts_on_time || 0), 0)
+    const totalShiftsAll = weeklyStats.reduce((sum: number, s: any) => sum + (s.total_shifts || 0), 0)
+
+    // This week's shifts
+    const thisWeekOnTime = weeklyStats[0]?.shifts_on_time ?? null
+    const thisWeekTotal = weeklyStats[0]?.total_shifts ?? null
 
     // Count Google review mentions
     const reviewMentions = weeklyStats.filter((s: any) => s.got_named_in_review).length
@@ -89,8 +93,11 @@ export default function MyStatsPage() {
     const recentReceived = (received || []).filter((a: any) => new Date(a.created_at) >= fourWeeksAgo).length
 
     setLeadStats({
-      onTimeWeeks,
-      totalWeeks,
+      totalShiftsOnTime,
+      totalShiftsAll,
+      thisWeekOnTime,
+      thisWeekTotal,
+      totalWeeks: weeklyStats.length,
       reviewMentions,
       appreciationsGiven,
       appreciationsReceived,
@@ -148,9 +155,12 @@ export default function MyStatsPage() {
 
   function LeadStatsView() {
     if (!leadStats) return null
-    const onTimePct = leadStats.totalWeeks > 0
-      ? Math.round((leadStats.onTimeWeeks / leadStats.totalWeeks) * 100)
+    const onTimePct = leadStats.totalShiftsAll > 0
+      ? Math.round((leadStats.totalShiftsOnTime / leadStats.totalShiftsAll) * 100)
       : 0
+    const thisWeekLabel = leadStats.thisWeekTotal != null
+      ? `${leadStats.thisWeekOnTime}/${leadStats.thisWeekTotal} this week`
+      : 'No data this week'
 
     return (
       <>
@@ -164,14 +174,14 @@ export default function MyStatsPage() {
             <p style={{ fontSize: 12, color: '#888', margin: '0 0 6px', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>On Time</p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
               <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 28, color: '#3a7b3c' }}>
-                {leadStats.onTimeWeeks}/{leadStats.totalWeeks}
+                {leadStats.totalShiftsOnTime}/{leadStats.totalShiftsAll}
               </span>
-              <span style={{ fontSize: 13, color: '#888' }}>weeks</span>
+              <span style={{ fontSize: 13, color: '#888' }}>shifts</span>
             </div>
             <div style={{ marginTop: 8, height: 6, background: '#e8e0cc', borderRadius: 4 }}>
               <div style={{ width: onTimePct + '%', height: '100%', background: '#3a7b3c', borderRadius: 4 }} />
             </div>
-            <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>{onTimePct}% on-time rate</p>
+            <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>{onTimePct}% on-time · {thisWeekLabel}</p>
           </div>
 
           {/* Hours This Week */}
@@ -231,7 +241,7 @@ export default function MyStatsPage() {
                   <tr style={{ borderBottom: '2px solid #e0d9c8' }}>
                     <th style={{ textAlign: 'left', padding: '8px 10px', color: '#666' }}>Week</th>
                     <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Hours</th>
-                    <th style={{ textAlign: 'center', padding: '8px 10px', color: '#666' }}>On Time</th>
+                    <th style={{ textAlign: 'center', padding: '8px 10px', color: '#666' }}>On Time Shifts</th>
                     <th style={{ textAlign: 'center', padding: '8px 10px', color: '#666' }}>Review Mention</th>
                   </tr>
                 </thead>
@@ -245,9 +255,11 @@ export default function MyStatsPage() {
                         {s.hours_worked ? Number(s.hours_worked).toFixed(1) : '—'}
                       </td>
                       <td style={{ padding: '8px 10px', textAlign: 'center' }}>
-                        {s.was_on_time
-                          ? <span style={{ color: '#3a7b3c', fontWeight: 'bold' }}>Yes</span>
-                          : <span style={{ color: '#d32f2f' }}>No</span>}
+                        {s.total_shifts != null
+                          ? <span style={{ color: s.shifts_on_time === s.total_shifts ? '#3a7b3c' : '#d32f2f', fontWeight: 'bold' }}>
+                              {s.shifts_on_time}/{s.total_shifts}
+                            </span>
+                          : <span style={{ color: '#ccc' }}>—</span>}
                       </td>
                       <td style={{ padding: '8px 10px', textAlign: 'center' }}>
                         {s.got_named_in_review
