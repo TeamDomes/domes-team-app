@@ -61,10 +61,21 @@ export default function CatalogImportPage() {
 
       if (lines.length === 0) { setResult({ error: 'Empty file' }); setImporting(false); return }
 
-      // Find header row
-      const header = lines[0].split(delimiter)
-      const productIdx = header.findIndex(h => h.toLowerCase().includes('product'))
-      const retiredIdx = header.findIndex(h => h.toLowerCase().includes('retired'))
+      // Find the header row (scan for a row containing "Product")
+      let headerRowIdx = 0
+      for (let i = 0; i < Math.min(lines.length, 20); i++) {
+        const cols = lines[i].split(delimiter)
+        if (cols.some(c => c.trim().toLowerCase() === 'product')) {
+          headerRowIdx = i
+          break
+        }
+      }
+
+      const header = lines[headerRowIdx].split(delimiter)
+      const productIdx = header.findIndex(h => h.trim().toLowerCase() === 'product')
+      const retiredIdx = header.findIndex(h => h.trim().toLowerCase().includes('retired'))
+      // Remove metadata rows before header
+      lines = lines.slice(headerRowIdx)
 
       if (productIdx === -1) {
         setResult({ error: 'Could not find "Product" column. Make sure your file has a Product column header.' })
