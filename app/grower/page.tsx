@@ -130,8 +130,8 @@ export default function GrowerPage() {
   return (
     <MoodWrapper><div style={{ padding: 20 }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
-        <a href="/dashboard" style={{ color: '#3a7b3c', textDecoration: 'none', fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14 }}>
-          {'←'} Back to Dashboard
+        <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block' }}>
+          {'←'} Dashboard
         </a>
 
         <div style={{ textAlign: 'center', marginTop: 10, marginBottom: 20 }}>

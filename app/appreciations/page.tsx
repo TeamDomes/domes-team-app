@@ -54,7 +54,7 @@ export default function AppreciationsPage() {
           <h1 style={{ color: '#3a7b3c', fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Appreciations</h1>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#3a7b3c', color: 'white', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}>{showForm ? 'Cancel' : '+ Send'}</button>
-            <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer', color: '#666' }}>← Dashboard</button>
+            <button onClick={() => router.push('/dashboard')} style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>Dashboard</button>
           </div>
         </div>
         {showForm && (

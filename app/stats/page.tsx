@@ -313,8 +313,8 @@ export default function MyStatsPage() {
                 ))}
               </select>
             )}
-            <a href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 14, whiteSpace: 'nowrap' }}>
-              {'<-'} Dashboard
+            <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}>
+              {'←'} Dashboard
             </a>
           </div>
         </div>

@@ -295,7 +295,7 @@ export default function BingoAdminPage() {
           </div>
           <div style={{display:'flex',gap:'8px'}}>
             <button onClick={()=>router.push('/bingo')} style={btnO}>← BINGO</button>
-            <button onClick={()=>router.push('/dashboard')} style={btnO}>Dashboard</button>
+            <button onClick={()=>router.push('/dashboard')} style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>Dashboard</button>
           </div>
         </div>
         {!cycle && <div style={card}><p style={{color:'#888',textAlign:'center'}}>No active BINGO cycle.</p></div>}

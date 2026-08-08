@@ -98,9 +98,10 @@ export default function StaffReviews() {
             <p style={{ margin: 0, fontSize: 13, color: '#888' }}>Share your product knowledge with the team</p>
           </div>
           <button onClick={() => router.push('/dashboard')} style={{
-            background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.1)',
-            padding: '8px 16px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
-            fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#555',
+            background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
+            padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+            fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
           }}>Dashboard</button>
         </div>
 

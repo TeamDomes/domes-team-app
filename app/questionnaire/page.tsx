@@ -157,7 +157,7 @@ export default function QuestionnairePage() {
           <p style={{ fontSize: 48, margin: '0 0 16px' }}>{'\u2705'}</p>
           <h2 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', margin: '0 0 12px' }}>You did it!</h2>
           <p style={{ color: '#666', margin: '0 0 20px' }}>Your answers have been saved and trivia questions have been created from your responses. Your teammates are going to have fun guessing!</p>
-          <a href="/dashboard" style={{ color: '#387dac', fontWeight: 'bold', textDecoration: 'none' }}>Back to Dashboard</a>
+          <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>{'←'} Dashboard</a>
         </div>
       </div></MoodWrapper>
     )
@@ -170,7 +170,7 @@ export default function QuestionnairePage() {
           <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: 0 }}>
             Get to Know You
           </h1>
-          <a href="/dashboard" style={{ color: '#387dac', textDecoration: 'none', fontWeight: 'bold' }}>Dashboard</a>
+          <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>{'←'} Dashboard</a>
         </div>
         <p style={{ color: '#543c2d', marginBottom: 24, fontSize: 15 }}>
           Help your teammates get to know you! Fill out at least 4 of these and your answers will become trivia questions for the team. No wrong answers here (except boring ones).

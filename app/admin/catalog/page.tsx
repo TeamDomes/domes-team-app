@@ -112,28 +112,29 @@ export default function CatalogImportPage() {
         if (!existingNames.has(name)) newBrands.push(name)
       })
 
-      // Insert new brands
+      // Insert new brands in batches
       if (newBrands.length > 0) {
-        for (const name of newBrands) {
-          await supabase.from('brands').insert({ name, is_active: true })
+        const brandRows = newBrands.map(name => ({ name, is_active: true }))
+        for (let i = 0; i < brandRows.length; i += 100) {
+          await supabase.from('brands').insert(brandRows.slice(i, i + 100))
         }
       }
 
       // Mark retired brands
-      for (const name of Array.from(retiredBrands)) {
-        await supabase.from('brands').update({ is_active: false }).eq('name', name)
+      const retiredArr = Array.from(retiredBrands)
+      if (retiredArr.length > 0) {
+        await supabase.from('brands').update({ is_active: false }).in('name', retiredArr)
       }
 
       // Re-activate brands that are back
-      for (const name of Array.from(brandSet)) {
-        if (existingNames.has(name)) {
-          await supabase.from('brands').update({ is_active: true }).eq('name', name)
-        }
+      const reactivate = Array.from(brandSet).filter(n => existingNames.has(n))
+      if (reactivate.length > 0) {
+        await supabase.from('brands').update({ is_active: true }).in('name', reactivate)
       }
 
-      // Also populate products table for Staff Reviews dropdown
+      // Also populate products table for Staff Reviews dropdown (batched)
       const categoryIdx = header.findIndex(h => h.toLowerCase().includes('category') || h.toLowerCase().includes('mastercategory'))
-      let productsAdded = 0
+      const productBatch: any[] = []
       for (const cols of dataRows) {
         const product = cols[productIdx]
         if (!product) continue
@@ -141,11 +142,15 @@ export default function CatalogImportPage() {
         if (isRetired) continue
         const brand = product.split('|')[0].trim()
         const category = categoryIdx >= 0 ? (cols[categoryIdx] || '') : ''
+        productBatch.push({ name: product, brand, category, source: 'catalog', is_active: true })
+      }
+      let productsAdded = 0
+      for (let i = 0; i < productBatch.length; i += 200) {
         const { error } = await supabase.from('products').upsert(
-          { name: product, brand, category, source: 'catalog', is_active: true },
+          productBatch.slice(i, i + 200),
           { onConflict: 'name' }
         )
-        if (!error) productsAdded++
+        if (!error) productsAdded += Math.min(200, productBatch.length - i)
       }
 
       setResult({
@@ -185,8 +190,8 @@ export default function CatalogImportPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f4e6b4', padding: 20 }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        <a href="/dashboard" style={{ color: '#3a7b3c', textDecoration: 'none', fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14 }}>
-          {'←'} Back to Dashboard
+        <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block' }}>
+          {'←'} Dashboard
         </a>
 
         <h1 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 24, color: '#543c2d', marginTop: 10 }}>
