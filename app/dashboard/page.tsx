@@ -6,17 +6,18 @@ import { awardPoints, POINTS } from '@/lib/points'
 
 export default function Dashboard() {
   const [userEmail, setUserEmail] = useState('')
-  const [teamMember, setTeamMember] = useState(null)
+  const [teamMember, setTeamMember] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const [triviaQ, setTriviaQ] = useState(null)
-  const [selectedAnswer, setSelectedAnswer] = useState(null)
+  const [triviaQ, setTriviaQ] = useState<any>(null)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [answered, setAnswered] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
   const [alreadyAnswered, setAlreadyAnswered] = useState(false)
   const [triviaStats, setTriviaStats] = useState({ correct: 0, total: 0 })
   const [totalPoints, setTotalPoints] = useState(0)
   const [weekPoints, setWeekPoints] = useState(0)
+  const [celebrations, setCelebrations] = useState<any[]>([])
 
   useEffect(() => {
     async function loadUser() {
@@ -30,38 +31,64 @@ export default function Dashboard() {
         await loadTrivia(member.id)
         await loadPoints(member.id)
       }
+      await loadCelebrations()
       setLoading(false)
     }
     loadUser()
   }, [router])
 
-  async function loadPoints(memberId) {
+  async function loadCelebrations() {
+    const { data: allMembers } = await supabase.from('team').select('full_name, birthday, hire_date')
+    if (!allMembers) return
+    const today = new Date()
+    const m = today.getMonth() + 1
+    const d = today.getDate()
+    const items: any[] = []
+    allMembers.forEach((member: any) => {
+      if (member.birthday) {
+        const bday = new Date(member.birthday + 'T12:00:00')
+        if (bday.getMonth() + 1 === m && bday.getDate() === d) {
+          items.push({ name: member.full_name, type: 'birthday' })
+        }
+      }
+      if (member.hire_date) {
+        const hd = new Date(member.hire_date + 'T12:00:00')
+        if (hd.getMonth() + 1 === m && hd.getDate() === d && hd.getFullYear() < today.getFullYear()) {
+          const years = today.getFullYear() - hd.getFullYear()
+          items.push({ name: member.full_name, type: 'anniversary', years })
+        }
+      }
+    })
+    setCelebrations(items)
+  }
+
+  async function loadPoints(memberId: string) {
     const { data: allPts } = await supabase.from('points_log').select('points, created_at').eq('team_member_id', memberId)
     if (!allPts) return
-    const total = allPts.reduce((sum, p) => sum + p.points, 0)
+    const total = allPts.reduce((sum: number, p: any) => sum + p.points, 0)
     setTotalPoints(total)
     const now = new Date()
     const monday = new Date(now)
     monday.setDate(now.getDate() - now.getDay() + 1)
     monday.setHours(0, 0, 0, 0)
-    const week = allPts.filter(p => new Date(p.created_at) >= monday).reduce((sum, p) => sum + p.points, 0)
+    const week = allPts.filter((p: any) => new Date(p.created_at) >= monday).reduce((sum: number, p: any) => sum + p.points, 0)
     setWeekPoints(week)
   }
 
-  async function loadTrivia(memberId) {
+  async function loadTrivia(memberId: string) {
     const today = new Date().toISOString().split('T')[0]
     const { data: allQs } = await supabase.from('trivia_questions').select('*')
     if (!allQs || allQs.length === 0) return
     const { data: myAnswers } = await supabase.from('trivia_answers').select('*').eq('team_member_id', memberId)
-    const answeredIds = new Set((myAnswers || []).map(a => a.question_id))
+    const answeredIds = new Set((myAnswers || []).map((a: any) => a.question_id))
     const stats = {
-      correct: (myAnswers || []).filter(a => a.is_correct).length,
+      correct: (myAnswers || []).filter((a: any) => a.is_correct).length,
       total: (myAnswers || []).length
     }
     setTriviaStats(stats)
-    const todayAnswer = (myAnswers || []).find(a => a.answered_date === today)
+    const todayAnswer = (myAnswers || []).find((a: any) => a.answered_date === today)
     if (todayAnswer) {
-      const q = allQs.find(q => q.id === todayAnswer.question_id)
+      const q = allQs.find((q: any) => q.id === todayAnswer.question_id)
       if (q) {
         setTriviaQ(q)
         setSelectedAnswer(todayAnswer.answer)
@@ -71,23 +98,21 @@ export default function Dashboard() {
       }
       return
     }
-    // Adaptive difficulty: check last 5 answers for streak
-    const recent = (myAnswers || []).sort((a, b) => b.answered_date.localeCompare(a.answered_date)).slice(0, 5)
-    const recentCorrect = recent.filter(a => a.is_correct).length
+    const recent = (myAnswers || []).sort((a: any, b: any) => b.answered_date.localeCompare(a.answered_date)).slice(0, 5)
+    const recentCorrect = recent.filter((a: any) => a.is_correct).length
     let difficulty = 'Easy'
     if (recentCorrect >= 4) difficulty = 'Hard'
     else if (recentCorrect >= 2) difficulty = 'Medium'
 
-    const unanswered = allQs.filter(q => !answeredIds.has(q.id))
+    const unanswered = allQs.filter((q: any) => !answeredIds.has(q.id))
     const pool = unanswered.length > 0 ? unanswered : allQs
-    // Prefer questions at the right difficulty
-    const diffPool = pool.filter(q => q.difficulty === difficulty)
+    const diffPool = pool.filter((q: any) => q.difficulty === difficulty)
     const finalPool = diffPool.length > 0 ? diffPool : pool
     const dayIndex = Math.floor(Date.now() / 86400000) % finalPool.length
     setTriviaQ(finalPool[dayIndex])
   }
 
-  async function handleAnswer(letter) {
+  async function handleAnswer(letter: string) {
     if (answered || !triviaQ || !teamMember) return
     const correct = letter === triviaQ.correct_answer
     setSelectedAnswer(letter)
@@ -121,22 +146,22 @@ export default function Dashboard() {
   const progress = nextTier ? Math.min(100, Math.round((totalPoints / nextTier) * 100)) : 100
 
   const navItems = [
-    { label: 'My Stats', href: '/stats', emoji: '\uD83D\uDCCA', desc: 'Your weekly sales performance' },
-    { label: 'Domes Wordle', href: '/wordle', emoji: '\uD83C\uDF3F', desc: 'Daily cannabis word puzzle' },
-    { label: 'BINGO', href: '/bingo', emoji: '\uD83C\uDFAF', desc: 'Check your BINGO card' },
-    { label: 'Appreciations', href: '/appreciations', emoji: '\uD83D\uDC9A', desc: 'Recognize your teammates' },
-    { label: 'Pets', href: '/pets', emoji: '\uD83D\uDC3E', desc: 'Share photos of your pets' },
-    { label: 'Spotted', href: '/spotted', emoji: '\uD83D\uDC40', desc: 'Spotted any cool products in the wild?' },
-    { label: 'Weekend Recap', href: '/recap', emoji: '\uD83C\uDF89', desc: 'Weekly highlights and wins' },
-    { label: 'Grower of the Week', href: '/grower', emoji: '\uD83C\uDF31', desc: 'Learn about the brands we carry' },
-    { label: 'Get to Know You', href: '/questionnaire', emoji: '\uD83E\uDD14', desc: 'Fill out your fun facts for team trivia' },
-    { label: 'Wall of Love', href: '/wall-of-love', emoji: '\u2B50', desc: 'Google reviews from happy customers' },
+    { label: 'My Stats', href: '/stats', emoji: '📊', desc: 'Your weekly sales performance' },
+    { label: 'Domes Wordle', href: '/wordle', emoji: '🌿', desc: 'Daily cannabis word puzzle' },
+    { label: 'BINGO', href: '/bingo', emoji: '🎯', desc: 'Check your BINGO card' },
+    { label: 'Appreciations', href: '/appreciations', emoji: '💚', desc: 'Recognize your teammates' },
+    { label: 'Pets', href: '/pets', emoji: '🐾', desc: 'Share photos of your pets' },
+    { label: 'Spotted', href: '/spotted', emoji: '👀', desc: 'Spotted any cool products in the wild?' },
+    { label: 'Weekend Recap', href: '/recap', emoji: '🎉', desc: 'Weekly highlights and wins' },
+    { label: 'Grower of the Week', href: '/grower', emoji: '🌱', desc: 'Learn about the brands we carry' },
+    { label: 'Get to Know You', href: '/questionnaire', emoji: '🤔', desc: 'Fill out your fun facts for team trivia' },
+    { label: 'Wall of Love', href: '/wall-of-love', emoji: '⭐', desc: 'Google reviews from happy customers' },
   ]
 
-  const optionStyle = (letter) => {
-    const base = {
+  const optionStyle = (letter: string) => {
+    const base: any = {
       width: '100%', padding: '10px 14px', border: '2px solid #ddd', borderRadius: 8,
-      background: 'white', cursor: answered ? 'default' : 'pointer', textAlign: 'left',
+      background: 'white', cursor: answered ? 'default' : 'pointer', textAlign: 'left' as const,
       fontSize: 14, display: 'flex', gap: 8, alignItems: 'center',
     }
     if (!answered) return base
@@ -153,11 +178,28 @@ export default function Dashboard() {
             <img src="/images/domes-logo.png" alt="Domes" style={{ width: 52, objectFit: 'contain' }} />
             <div>
               <h1 style={{ fontFamily: 'Hanley Script, Cooper Light, serif', color: '#3a7b3c', fontSize: '22px', fontWeight: 'normal', margin: '0 0 2px' }}>Welcome, {displayName}!</h1>
-              <p style={{ color: '#888', fontSize: '13px', margin: 0, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>{role}{type ? ` \u00B7 ${type}` : ''}</p>
+              <p style={{ color: '#888', fontSize: '13px', margin: 0, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>{role}{type ? ` · ${type}` : ''}</p>
             </div>
           </div>
           <button onClick={handleSignOut} style={{ backgroundColor: 'white', color: '#666', border: '1px solid #ddd', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Sign Out</button>
         </div>
+
+        {/* Celebrations Banner */}
+        {celebrations.length > 0 && (
+          <div style={{ background: 'linear-gradient(135deg, #ffcb1f 0%, #f37029 100%)', borderRadius: 12, padding: 20, marginBottom: 20, textAlign: 'center' }}>
+            {celebrations.map((c, i) => (
+              <div key={i} style={{ marginBottom: i < celebrations.length - 1 ? 8 : 0 }}>
+                <p style={{ margin: 0, fontFamily: 'Cooper Black, serif', fontSize: 22, color: '#543c2d' }}>
+                  {c.type === 'birthday' ? '🎂' : '🎉'}{' '}
+                  {c.type === 'birthday'
+                    ? `Happy Birthday, ${c.name}!`
+                    : `Happy ${c.years}-Year Anniversary, ${c.name}!`
+                  }
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Points Card */}
         <div style={{ background: 'linear-gradient(135deg, #3a7b3c 0%, #2d5e2f 100%)', borderRadius: 12, padding: 20, marginBottom: 20, color: 'white' }}>
@@ -172,7 +214,7 @@ export default function Dashboard() {
           <div style={{ marginBottom: 6 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
               <span>Next: {tierLabel}</span>
-              <span>{nextTier ? totalPoints + '/' + nextTier : '\u2B50'}</span>
+              <span>{nextTier ? totalPoints + '/' + nextTier : '⭐'}</span>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 20, height: 8, overflow: 'hidden' }}>
               <div style={{ background: '#ffcb1f', height: '100%', borderRadius: 20, width: progress + '%', transition: 'width 0.5s' }}></div>
@@ -180,14 +222,14 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 12, fontSize: 11, opacity: 0.7 }}>
             <span>500 = $5</span>
-            <span>{'\u00B7'}</span>
+            <span>{'·'}</span>
             <span>1,000 = $15</span>
-            <span>{'\u00B7'}</span>
+            <span>{'·'}</span>
             <span>1,500 = $25</span>
           </div>
           {(role === 'Admin') && (
             <div style={{ marginTop: 10, textAlign: 'right' }}>
-              <a href="/admin/points" style={{ color: '#ffcb1f', fontSize: 12, textDecoration: 'none' }}>View Weekly Report {'\u2192'}</a>
+              <a href="/admin/points" style={{ color: '#ffcb1f', fontSize: 12, textDecoration: 'none' }}>View Weekly Report {'→'}</a>
             </div>
           )}
         </div>

@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [triviaStats, setTriviaStats] = useState({ correct: 0, total: 0 })
   const [totalPoints, setTotalPoints] = useState(0)
   const [weekPoints, setWeekPoints] = useState(0)
+  const [celebrations, setCelebrations] = useState([])
 
   useEffect(() => {
     async function loadUser() {
@@ -32,10 +33,36 @@ export default function Dashboard() {
         await loadTrivia(member.id)
         await loadPoints(member.id)
       }
+      await loadCelebrations()
       setLoading(false)
     }
     loadUser()
   }, [router])
+
+  async function loadCelebrations() {
+    const { data: allMembers } = await supabase.from('team').select('full_name, birthday, hire_date')
+    if (!allMembers) return
+    const today = new Date()
+    const m = today.getMonth() + 1
+    const d = today.getDate()
+    const items = []
+    allMembers.forEach(member => {
+      if (member.birthday) {
+        const bday = new Date(member.birthday + 'T12:00:00')
+        if (bday.getMonth() + 1 === m && bday.getDate() === d) {
+          items.push({ name: member.full_name, type: 'birthday' })
+        }
+      }
+      if (member.hire_date) {
+        const hd = new Date(member.hire_date + 'T12:00:00')
+        if (hd.getMonth() + 1 === m && hd.getDate() === d && hd.getFullYear() < today.getFullYear()) {
+          const years = today.getFullYear() - hd.getFullYear()
+          items.push({ name: member.full_name, type: 'anniversary', years })
+        }
+      }
+    })
+    setCelebrations(items)
+  }
 
   async function loadPoints(memberId) {
     const { data: allPts } = await supabase.from('points_log').select('points, created_at').eq('team_member_id', memberId)
@@ -73,7 +100,6 @@ export default function Dashboard() {
       }
       return
     }
-    // Adaptive difficulty: check last 5 answers for streak
     const recent = (myAnswers || []).sort((a, b) => b.answered_date.localeCompare(a.answered_date)).slice(0, 5)
     const recentCorrect = recent.filter(a => a.is_correct).length
     let difficulty = 'Easy'
@@ -82,7 +108,6 @@ export default function Dashboard() {
 
     const unanswered = allQs.filter(q => !answeredIds.has(q.id))
     const pool = unanswered.length > 0 ? unanswered : allQs
-    // Prefer questions at the right difficulty
     const diffPool = pool.filter(q => q.difficulty === difficulty)
     const finalPool = diffPool.length > 0 ? diffPool : pool
     const dayIndex = Math.floor(Date.now() / 86400000) % finalPool.length
@@ -155,16 +180,33 @@ export default function Dashboard() {
             <img src="/images/domes-logo.png" alt="Domes" style={{ width: 52, objectFit: 'contain' }} />
             <div>
               <h1 style={{ fontFamily: 'Hanley Script, Cooper Light, serif', color: '#3a7b3c', fontSize: '22px', fontWeight: 'normal', margin: '0 0 2px' }}>Welcome, {displayName}!</h1>
-              <p style={{ color: '#888', fontSize: '13px', margin: 0, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>{role}{type ? \` \\u00B7 \${type}\` : ''}</p>
+              <p style={{ color: '#888', fontSize: '13px', margin: 0, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>{role}{type ? \\\` \\\\u00B7 \\\${type}\\\` : ''}</p>
             </div>
           </div>
           <button onClick={handleSignOut} style={{ backgroundColor: 'white', color: '#666', border: '1px solid #ddd', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Sign Out</button>
         </div>
 
+        {/* Celebrations Banner */}
+        {celebrations.length > 0 && (
+          <div style={{ background: 'linear-gradient(135deg, #ffcb1f 0%, #f37029 100%)', borderRadius: 12, padding: 20, marginBottom: 20, textAlign: 'center' }}>
+            {celebrations.map((c, i) => (
+              <div key={i} style={{ marginBottom: i < celebrations.length - 1 ? 8 : 0 }}>
+                <p style={{ margin: 0, fontFamily: 'Cooper Black, serif', fontSize: 22, color: '#543c2d' }}>
+                  {c.type === 'birthday' ? '\\uD83C\\uDF82' : '\\uD83C\\uDF89'}{' '}
+                  {c.type === 'birthday'
+                    ? \\\`Happy Birthday, \\\${c.name}!\\\`
+                    : \\\`Happy \\\${c.years}-Year Anniversary, \\\${c.name}!\\\`
+                  }
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Points Card */}
         <div style={{ background: 'linear-gradient(135deg, #3a7b3c 0%, #2d5e2f 100%)', borderRadius: 12, padding: 20, marginBottom: 20, color: 'white' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontFamily: 'Cooper Black, serif', fontSize: 18 }}>{'🏆'} My Points</h3>
+            <h3 style={{ margin: 0, fontFamily: 'Cooper Black, serif', fontSize: 18 }}>\\uD83C\\uDFC6 My Points</h3>
             <span style={{ fontSize: 12, opacity: 0.8 }}>This week: +{weekPoints}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
@@ -182,14 +224,14 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 12, fontSize: 11, opacity: 0.7 }}>
             <span>500 = $5</span>
-            <span>{'\\u00B7'}</span>
+            <span>\\u00B7</span>
             <span>1,000 = $15</span>
-            <span>{'\\u00B7'}</span>
+            <span>\\u00B7</span>
             <span>1,500 = $25</span>
           </div>
           {(role === 'Admin') && (
             <div style={{ marginTop: 10, textAlign: 'right' }}>
-              <a href="/admin/points" style={{ color: '#ffcb1f', fontSize: 12, textDecoration: 'none' }}>View Weekly Report {'\\u2192'}</a>
+              <a href="/admin/points" style={{ color: '#ffcb1f', fontSize: 12, textDecoration: 'none' }}>View Weekly Report \\u2192</a>
             </div>
           )}
         </div>
@@ -205,7 +247,7 @@ export default function Dashboard() {
               {['A', 'B', 'C', ...(triviaQ.option_d ? ['D'] : [])].map(letter => (
                 <button key={letter} onClick={() => handleAnswer(letter)} disabled={answered} style={optionStyle(letter)}>
                   <span style={{ fontWeight: 'bold', color: '#543c2d' }}>{letter}.</span>
-                  <span style={{ color: '#333' }}>{triviaQ[\`option_\${letter.toLowerCase()}\`]}</span>
+                  <span style={{ color: '#333' }}>{triviaQ[\\\`option_\\\${letter.toLowerCase()}\\\`]}</span>
                 </button>
               ))}
             </div>
