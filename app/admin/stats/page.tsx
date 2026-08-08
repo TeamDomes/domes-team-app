@@ -4,57 +4,36 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import * as XLSX from 'xlsx'
 
-// Maps for each report's name format → team member slug
-const DUTCHIE_NAME_MAP: Record<string, string> = {
-  'Audrey M.': 'audrey', 'Aud M.': 'audrey',
-  'Brenda Merlo Baca': 'brenda',
-  'Brian W.': 'brian',
-  'Craig P.': 'craig',
-  'Eric C.': 'eric',
-  'Jerome S.': 'jerome',
-  'Lucas S.': 'lucas',
-  'Mallory K.': 'mallory',
-  'Nakoa Z.': 'nakoa',
-  'David T.': 'david',
-  'Amanda Perez': 'amanda', 'Amanda S.': 'amanda',
-  'Samaria M': 'samaria', 'Samaria M.': 'samaria',
+const BIG_BASKET_THRESHOLD = 100
+
+// Match a report name to a team member by first name
+function findMember(reportName: string, team: any[]): any | null {
+  if (!reportName) return null
+  const rLow = reportName.toLowerCase().trim()
+  // Try exact full_name match first
+  for (const t of team) {
+    if (t.full_name?.toLowerCase() === rLow) return t
+  }
+  // Try first-name match (handles "Aud M.", "Craig P.", "Amanda Perez", etc.)
+  const rFirst = rLow.split(/[\s.]/)[0]
+  for (const t of team) {
+    const dbFirst = (t.first_name || t.full_name?.split(' ')[0] || '').toLowerCase()
+    if (dbFirst === rFirst || dbFirst.startsWith(rFirst) || rFirst.startsWith(dbFirst)) return t
+  }
+  return null
 }
 
-const ATTENDANCE_NAME_MAP: Record<string, string> = {
-  'Amanda Perez': 'amanda',
-  'Aud Moyce': 'audrey', 'Audrey Moyce': 'audrey',
-  'Brenda Merlo Baca': 'brenda',
-  'Brian Woodruff': 'brian',
-  'Craig Poplar': 'craig',
-  'Eric Cichinsky': 'eric',
-  'Jerome Sherrod': 'jerome',
-  'Lucas Slesinski': 'lucas',
-  'Mallory Kitchen': 'mallory',
-  'Nakoa Zuger': 'nakoa',
-  'David Tivnan': 'david',
-  'Samaria Marks': 'samaria',
+// For shared cash drawers like "Nakoa/Brian" — returns array of members
+function findCashMembers(empName: string, team: any[]): any[] {
+  if (!empName || empName === 'Lead' || empName === 'n/a' || empName === 'All') return []
+  const parts = empName.split('/')
+  const members: any[] = []
+  for (const part of parts) {
+    const m = findMember(part.trim(), team)
+    if (m) members.push(m)
+  }
+  return members
 }
-
-const CASH_NAME_MAP: Record<string, string[]> = {
-  'Amanda': ['amanda'],
-  'Aud': ['audrey'], 'Audrey': ['audrey'],
-  'Brenda': ['brenda'],
-  'Brian': ['brian'],
-  'Craig': ['craig'],
-  'Eric': ['eric'],
-  'Jerome': ['jerome'],
-  'Lucas': ['lucas'],
-  'Mal': ['mallory'], 'Mallory': ['mallory'],
-  'Nakoa': ['nakoa'],
-  'David': ['david'],
-  'Samaria': ['samaria'],
-  // Shared drawers — split evenly
-  'Nakoa/Brian': ['nakoa', 'brian'],
-  'Brian/Lucas': ['brian', 'lucas'],
-  'Nakoa/Lucas': ['nakoa', 'lucas'],
-}
-
-const BIG_BASKET_THRESHOLD = 100 // $100+ = big basket
 
 function parseCSV(text: string): string[][] {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
@@ -85,7 +64,6 @@ async function parseFile(file: File): Promise<string[][]> {
   return parseCSV(text)
 }
 
-// Parse all sheets from cash recon workbook
 async function parseCashReconSheets(file: File): Promise<string[][][]> {
   const buffer = await file.arrayBuffer()
   const workbook = XLSX.read(buffer, { type: 'array' })
@@ -102,6 +80,7 @@ async function parseCashReconSheets(file: File): Promise<string[][][]> {
 export default function StatsImportPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [aovFile, setAovFile] = useState<File | null>(null)
   const [upsellFile, setUpsellFile] = useState<File | null>(null)
   const [attendanceFile, setAttendanceFile] = useState<File | null>(null)
@@ -118,6 +97,7 @@ export default function StatsImportPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { window.location.href = '/login'; return }
     const { data: teamData } = await supabase.from('team').select('*')
+    setTeamMembers(teamData || [])
     let me: any = null
     ;(teamData || []).forEach((t: any) => {
       if (t.auth_user_id === user.id) me = t
@@ -127,7 +107,7 @@ export default function StatsImportPage() {
 
     const { data: stats } = await supabase
       .from('weekly_stats')
-      .select('*, team(full_name, role, type)')
+      .select('*')
       .order('week_ending', { ascending: false })
       .limit(50)
     setExistingStats(stats || [])
@@ -136,12 +116,14 @@ export default function StatsImportPage() {
 
   async function handleImport() {
     if (!aovFile || !upsellFile || !weekEnding) {
-      alert('Please select the AOV and Upsell files plus a week ending date (minimum required).')
+      alert('Please select the AOV and Upsell files plus a week ending date.')
       return
     }
 
     setImporting(true)
     try {
+      const team = teamMembers
+
       // ── 1. Parse AOV ──
       const aovRows = await parseFile(aovFile)
       let aovHeaderIdx = aovRows.findIndex(r => r[0]?.includes('Budtender'))
@@ -152,20 +134,21 @@ export default function StatsImportPage() {
       for (let i = aovHeaderIdx + 1; i < aovRows.length; i++) {
         const row = aovRows[i]
         if (!row[0]) continue
-        const memberId = DUTCHIE_NAME_MAP[row[0]]
-        if (!memberId) continue
+        const member = findMember(row[0], team)
+        if (!member) continue
+        const mid = member.id
         const netSalesIdx = aovHeader.findIndex((h: string) => h === 'Net Sales')
         const netAOVIdx = aovHeader.findIndex((h: string) => h === 'Net AOV')
         const ordersIdx = aovHeader.findIndex((h: string) => h === 'Total Orders')
         const netSales = parseFloat(row[netSalesIdx] || '0') || 0
         const netAOV = parseFloat(row[netAOVIdx] || '0') || 0
         const orders = parseInt(row[ordersIdx] || '0') || 0
-        if (aovData[memberId]) {
-          aovData[memberId].netSales += netSales
-          aovData[memberId].orders += orders
-          aovData[memberId].netAOV = aovData[memberId].netSales / aovData[memberId].orders
+        if (aovData[mid]) {
+          aovData[mid].netSales += netSales
+          aovData[mid].orders += orders
+          aovData[mid].netAOV = aovData[mid].netSales / aovData[mid].orders
         } else {
-          aovData[memberId] = { netSales, netAOV, orders }
+          aovData[mid] = { netSales, netAOV, orders }
         }
       }
 
@@ -179,11 +162,11 @@ export default function StatsImportPage() {
       for (let i = upsellHeaderIdx + 1; i < upsellRows.length; i++) {
         const row = upsellRows[i]
         if (!row[0]) continue
-        const memberId = DUTCHIE_NAME_MAP[row[0]]
-        if (!memberId) continue
+        const member = findMember(row[0], team)
+        if (!member) continue
         const txIdx = upsellHeader.findIndex((h: string) => h === 'Transactions')
         const upsellTxIdx = upsellHeader.findIndex((h: string) => h.includes('Upsell Transactions'))
-        upsellData[memberId] = {
+        upsellData[member.id] = {
           transactions: parseInt(row[txIdx] || '0') || 0,
           upsellTx: parseInt(row[upsellTxIdx] || '0') || 0,
         }
@@ -193,42 +176,30 @@ export default function StatsImportPage() {
       const onTimeData: Record<string, boolean> = {}
       if (attendanceFile) {
         const attRows = await parseFile(attendanceFile)
-        // Find header
         let attHeaderIdx = attRows.findIndex(r => r.some(c => c === 'Name'))
         if (attHeaderIdx < 0) attHeaderIdx = 0
         const attHeader = attRows[attHeaderIdx]
         const nameIdx = attHeader.indexOf('Name')
         const typeIdx = attHeader.indexOf('Type')
-
-        // First assume everyone is on time
         const lateMembers = new Set<string>()
         for (let i = attHeaderIdx + 1; i < attRows.length; i++) {
           const row = attRows[i]
           const name = row[nameIdx]
           const type = row[typeIdx]
-          const memberId = ATTENDANCE_NAME_MAP[name]
-          if (!memberId) continue
-          if (!onTimeData[memberId]) onTimeData[memberId] = true
+          const member = findMember(name, team)
+          if (!member) continue
+          if (!(member.id in onTimeData)) onTimeData[member.id] = true
           if (type === 'late on clock-in' || type === 'no show on shift') {
-            lateMembers.add(memberId)
+            lateMembers.add(member.id)
           }
         }
-        // Mark late members
         for (const id of lateMembers) {
           onTimeData[id] = false
-        }
-        // Also mark anyone who appeared (even if only early entries) as on time
-        for (let i = attHeaderIdx + 1; i < attRows.length; i++) {
-          const row = attRows[i]
-          const memberId = ATTENDANCE_NAME_MAP[row[nameIdx]]
-          if (memberId && !(memberId in onTimeData)) {
-            onTimeData[memberId] = true
-          }
         }
       }
 
       // ── 4. Parse Cash Reconciliation (optional) ──
-      const drawerData: Record<string, number> = {} // sum of absolute variance
+      const drawerData: Record<string, number> = {}
       if (cashReconFile) {
         const sheets = await parseCashReconSheets(cashReconFile)
         for (const sheet of sheets) {
@@ -241,14 +212,12 @@ export default function StatsImportPage() {
           for (let i = headerIdx + 1; i < sheet.length; i++) {
             const row = sheet[i]
             if (!row[0] || !row[0].match(/^\d+$/) || !row[empIdx]) continue
-            const empName = row[empIdx]
             const variance = parseFloat(row[varIdx] || '0') || 0
-            const memberIds = CASH_NAME_MAP[empName]
-            if (!memberIds || memberIds.length === 0) continue
-            // Split variance evenly for shared drawers
-            const splitVariance = Math.abs(variance) / memberIds.length
-            for (const mid of memberIds) {
-              drawerData[mid] = (drawerData[mid] || 0) + splitVariance
+            const members = findCashMembers(row[empIdx], team)
+            if (members.length === 0) continue
+            const splitVariance = Math.abs(variance) / members.length
+            for (const m of members) {
+              drawerData[m.id] = (drawerData[m.id] || 0) + splitVariance
             }
           }
         }
@@ -266,17 +235,17 @@ export default function StatsImportPage() {
         for (let i = salesHeaderIdx + 1; i < salesRows.length; i++) {
           const row = salesRows[i]
           if (!row[nameIdx]) continue
-          const memberId = DUTCHIE_NAME_MAP[row[nameIdx]]
-          if (!memberId) continue
+          const member = findMember(row[nameIdx], team)
+          if (!member) continue
           const total = parseFloat(row[totalIdx] || '0') || 0
           if (total >= BIG_BASKET_THRESHOLD) {
-            bigBasketData[memberId] = (bigBasketData[memberId] || 0) + 1
+            bigBasketData[member.id] = (bigBasketData[member.id] || 0) + 1
           }
         }
       }
 
       // ── Combine & upsert ──
-      const allMembers = new Set([
+      const allMemberIds = new Set([
         ...Object.keys(aovData),
         ...Object.keys(upsellData),
         ...Object.keys(onTimeData),
@@ -285,7 +254,7 @@ export default function StatsImportPage() {
       ])
       let imported = 0
 
-      for (const memberId of allMembers) {
+      for (const memberId of allMemberIds) {
         const aov = aovData[memberId] || { netSales: 0, netAOV: 0, orders: 0 }
         const upsell = upsellData[memberId] || { transactions: 0, upsellTx: 0 }
         const upsellRate = upsell.transactions > 0
@@ -315,9 +284,15 @@ export default function StatsImportPage() {
         imported++
       }
 
+      // Build friendly name list for result
+      const nameList = [...allMemberIds].map(id => {
+        const m = team.find((t: any) => t.id === id)
+        return m?.full_name || id
+      })
+
       setResult({
         imported,
-        members: [...allMembers],
+        members: nameList,
         extras: {
           attendance: Object.keys(onTimeData).length > 0,
           cashRecon: Object.keys(drawerData).length > 0,
@@ -342,6 +317,10 @@ export default function StatsImportPage() {
       <p style={{ color: '#888', fontSize: 16, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Admin access required.</p>
     </div>
   )
+
+  // Build team lookup for display
+  const teamMap: Record<string, any> = {}
+  teamMembers.forEach((t: any) => { teamMap[t.id] = t })
 
   const statsByWeek: Record<string, any[]> = {}
   existingStats.forEach(s => {
@@ -501,7 +480,7 @@ export default function StatsImportPage() {
                     <tbody>
                       {stats.map((s: any) => (
                         <tr key={s.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                          <td style={{ padding: '8px 12px', color: '#333' }}>{s.team?.full_name || s.team_member_id}</td>
+                          <td style={{ padding: '8px 12px', color: '#333' }}>{teamMap[s.team_member_id]?.full_name || s.team_member_id}</td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>${Number(s.avg_basket).toFixed(2)}</td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>${Number(s.total_net_sales).toLocaleString()}</td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>{s.total_orders}</td>
