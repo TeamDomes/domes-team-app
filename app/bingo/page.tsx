@@ -31,9 +31,9 @@ export default function BingoPage() {
 
   const squareLabels: Record<string, { letter: string; name: string; desc: string }> = {
     square_b: { letter: 'B', name: 'Big Basket', desc: 'Ring up 4+ transactions over $250 (PT: 3+)' },
-    square_i: { letter: 'I', name: 'In the Upsell', desc: 'Achieve an 8%+ upsell rate for the week' },
-    square_n: { letter: 'N', name: 'Near-Perfect Drawer', desc: 'Cash drawer is off by less than $1 at close' },
-    square_g: { letter: 'G', name: 'Got Here On Time', desc: 'Clock in on time for every shift that week' },
+    square_i: { letter: 'I', name: 'In the Upsell', desc: 'Achieve a 10%+ upsell rate for the week' },
+    square_n: { letter: 'N', name: 'Near-Perfect Drawer', desc: 'Cash drawer is off by less than $0.50 at close' },
+    square_g: { letter: 'G', name: 'Got Here On Time', desc: 'Clock in on time for every shift' },
     square_o: { letter: 'O', name: 'Oh Hey Google', desc: 'Get mentioned by name in a 5-star Google review' },
   }
 

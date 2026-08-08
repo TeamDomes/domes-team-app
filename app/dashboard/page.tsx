@@ -71,10 +71,20 @@ export default function Dashboard() {
       }
       return
     }
+    // Adaptive difficulty: check last 5 answers for streak
+    const recent = (myAnswers || []).sort((a, b) => b.answered_date.localeCompare(a.answered_date)).slice(0, 5)
+    const recentCorrect = recent.filter(a => a.is_correct).length
+    let difficulty = 'Easy'
+    if (recentCorrect >= 4) difficulty = 'Hard'
+    else if (recentCorrect >= 2) difficulty = 'Medium'
+
     const unanswered = allQs.filter(q => !answeredIds.has(q.id))
     const pool = unanswered.length > 0 ? unanswered : allQs
-    const dayIndex = Math.floor(Date.now() / 86400000) % pool.length
-    setTriviaQ(pool[dayIndex])
+    // Prefer questions at the right difficulty
+    const diffPool = pool.filter(q => q.difficulty === difficulty)
+    const finalPool = diffPool.length > 0 ? diffPool : pool
+    const dayIndex = Math.floor(Date.now() / 86400000) % finalPool.length
+    setTriviaQ(finalPool[dayIndex])
   }
 
   async function handleAnswer(letter) {
@@ -111,6 +121,8 @@ export default function Dashboard() {
   const progress = nextTier ? Math.min(100, Math.round((totalPoints / nextTier) * 100)) : 100
 
   const navItems = [
+    { label: 'My Stats', href: '/stats', emoji: '\uD83D\uDCCA', desc: 'Your weekly sales performance' },
+    { label: 'Domes Wordle', href: '/wordle', emoji: '\uD83C\uDF3F', desc: 'Daily cannabis word puzzle' },
     { label: 'BINGO', href: '/bingo', emoji: '\uD83C\uDFAF', desc: 'Check your BINGO card' },
     { label: 'Appreciations', href: '/appreciations', emoji: '\uD83D\uDC9A', desc: 'Recognize your teammates' },
     { label: 'Pets', href: '/pets', emoji: '\uD83D\uDC3E', desc: 'Share photos of your pets' },
@@ -135,7 +147,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif', padding: '20px' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <img src="/images/domes-logo.png" alt="Domes" style={{ width: 52, objectFit: 'contain' }} />
@@ -210,14 +222,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
           {navItems.map(item => (
-            <button key={item.href} onClick={() => router.push(item.href)} style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: 'white', border: 'none', borderRadius: '12px', padding: '20px', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: '0 2px 8px rgba(84,60,45,0.06)' }}>
-              <span style={{ fontSize: '32px' }}>{item.emoji}</span>
-              <div>
-                <p style={{ margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: '17px', color: '#3a7b3c' }}>{item.label}</p>
-                <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#888', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>{item.desc}</p>
-              </div>
+            <button key={item.href} onClick={() => router.push(item.href)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#d4e8d4', border: '1px solid rgba(58,123,60,0.15)', borderRadius: '16px', padding: '24px 16px', cursor: 'pointer', textAlign: 'center', width: '100%', minHeight: '140px', boxShadow: '0 2px 8px rgba(84,60,45,0.06)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+              <span style={{ fontSize: '40px', marginBottom: '10px' }}>{item.emoji}</span>
+              <p style={{ margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: '15px', color: '#3a7b3c', lineHeight: 1.2 }}>{item.label}</p>
+              <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#888', fontFamily: 'Cooper Light, system-ui, sans-serif', lineHeight: 1.3 }}>{item.desc}</p>
             </button>
           ))}
         </div>
