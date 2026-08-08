@@ -286,11 +286,11 @@ export default function MyStatsPage() {
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: '0 0 4px' }}>
+            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#333', fontSize: 28, margin: '0 0 4px', textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
               {isAdmin && viewingUser?.id !== currentUser?.id ? `${viewingUser?.full_name}'s Stats` : 'My Stats'}
             </h1>
             {viewingUser && (
-              <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
+              <p style={{ fontSize: 13, color: '#555', margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
                 {viewingUser.full_name} {'·'} {viewingUser.role === 'Lead' ? 'Team Lead' : viewingUser.type}
               </p>
             )}

@@ -135,10 +135,10 @@ export default function GrowerPage() {
         </a>
 
         <div style={{ textAlign: 'center', marginTop: 10, marginBottom: 20 }}>
-          <h1 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 28, color: '#3a7b3c', margin: 0 }}>
+          <h1 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 28, color: '#333', margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
             {'🌱'} Grower of the Week
           </h1>
-          <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#543c2d', marginTop: 5 }}>
+          <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#555', marginTop: 5, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
             Learn about the brands we carry and become a product expert!
           </p>
         </div>

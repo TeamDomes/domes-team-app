@@ -92,10 +92,10 @@ export default function StaffReviews() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', fontSize: 26, margin: '0 0 4px', color: '#333' }}>
+            <h1 style={{ fontFamily: 'Cooper Black, serif', fontSize: 26, margin: '0 0 4px', color: '#333', textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
               Staff Reviews
             </h1>
-            <p style={{ margin: 0, fontSize: 13, color: '#888' }}>Share your product knowledge with the team</p>
+            <p style={{ margin: 0, fontSize: 13, color: '#555', textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>Share your product knowledge with the team</p>
           </div>
           <button onClick={() => router.push('/dashboard')} style={{
             background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',

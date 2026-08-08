@@ -128,10 +128,10 @@ export default function LeaderboardPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: '0 0 4px' }}>
+            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#333', fontSize: 28, margin: '0 0 4px', textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
               {'\u{1F3C6}'} Leaderboard
             </h1>
-            <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
+            <p style={{ fontSize: 13, color: '#555', margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
               {viewMode === 'week'
                 ? `Week ending ${latestWeek ? new Date(latestWeek + 'T12:00:00').toLocaleDateString() : '—'}`
                 : rollingLabel}

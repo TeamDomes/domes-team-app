@@ -95,7 +95,7 @@ export default function SpottedPage() {
     <MoodWrapper><div style={{ padding: '20px' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: 0 }}>
+          <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#333', fontSize: 28, margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
             Spotted in the Wild
           </h1>
           <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
@@ -103,7 +103,7 @@ export default function SpottedPage() {
           </a>
         </div>
 
-        <p style={{ color: '#543c2d', marginBottom: 16, fontSize: 15 }}>
+        <p style={{ color: '#555', marginBottom: 16, fontSize: 15, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
           Seen any of our products, brands, or anything else inspiring out in the world? Pin it here!
         </p>
 
