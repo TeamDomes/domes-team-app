@@ -6,6 +6,13 @@ import * as XLSX from 'xlsx'
 
 const BIG_BASKET_THRESHOLD = 250
 
+function parseVariance(val: any): number {
+  if (typeof val === 'number') return val
+  const str = String(val).replace(/[$,]/g, '').trim()
+  if (str.startsWith('(') && str.endsWith(')')) return -parseFloat(str.slice(1, -1)) || 0
+  return parseFloat(str) || 0
+}
+
 // Match a report name to a team member by first name
 function findMember(reportName: string, team: any[]): any | null {
   if (!reportName) return null
@@ -20,17 +27,32 @@ function findMember(reportName: string, team: any[]): any | null {
     const dbFirst = (t.first_name || t.full_name?.split(' ')[0] || '').toLowerCase()
     if (dbFirst === rFirst || dbFirst.startsWith(rFirst) || rFirst.startsWith(dbFirst)) return t
   }
+  // Fuzzy: match if first 3+ chars match (handles "Samara" → "Samaria")
+  if (rFirst.length >= 3) {
+    const prefix = rFirst.slice(0, 3)
+    for (const t of team) {
+      const dbFirst = (t.first_name || t.full_name?.split(' ')[0] || '').toLowerCase()
+      if (dbFirst.startsWith(prefix) && Math.abs(dbFirst.length - rFirst.length) <= 2) return t
+    }
+  }
   return null
 }
 
-// For shared cash drawers like "Nakoa/Brian" — returns array of members
+// For shared cash drawers like "Nakoa/Brian", "Craig / Sam", "Nakoa/Brian(4:30-close)"
 function findCashMembers(empName: string, team: any[]): any[] {
-  if (!empName || empName === 'Lead' || empName === 'n/a' || empName === 'All') return []
-  const parts = empName.split('/')
+  if (!empName) return []
+  const low = empName.toLowerCase().trim()
+  if (low === 'lead' || low === 'n/a' || low === 'na' || low === 'all' || low === 'none' || low === 'unused') return []
+  // Clean up: remove parenthetical notes like "(4:30-close)"
+  const cleaned = empName.replace(/\(.*?\)/g, '').trim()
+  // Split on / with optional spaces
+  const parts = cleaned.split(/\s*\/\s*/)
   const members: any[] = []
   for (const part of parts) {
-    const m = findMember(part.trim(), team)
-    if (m) members.push(m)
+    const name = part.trim()
+    if (!name || name.toLowerCase() === 'lead' || name.toLowerCase() === 'all') continue
+    const m = findMember(name, team)
+    if (m && !members.find(x => x.id === m.id)) members.push(m)
   }
   return members
 }
@@ -84,7 +106,7 @@ export default function StatsImportPage() {
   const [aovFile, setAovFile] = useState<File | null>(null)
   const [upsellFile, setUpsellFile] = useState<File | null>(null)
   const [attendanceFile, setAttendanceFile] = useState<File | null>(null)
-  const [cashReconFile, setCashReconFile] = useState<File | null>(null)
+  const [cashReconFiles, setCashReconFiles] = useState<File[]>([])
   const [salesRawFile, setSalesRawFile] = useState<File | null>(null)
   const [payrollFile, setPayrollFile] = useState<File | null>(null)
   const [weekEnding, setWeekEnding] = useState('')
@@ -200,42 +222,64 @@ export default function StatsImportPage() {
       }
 
       // ── 4. Parse Cash Reconciliation (optional) ──
-      // Track per-member: did every relevant day have variance <= $0.50?
+      // Matches BINGO admin logic: use Cash Variance column, parseVariance, check <= $0.50
       const drawerResults: Record<string, { pass: boolean; worstVariance: number }> = {}
-      if (cashReconFile) {
+      if (cashReconFiles.length > 0) {
+       for (const cashReconFile of cashReconFiles) {
+        const buffer = await cashReconFile.arrayBuffer()
+        const workbook = XLSX.read(buffer, { type: 'array' })
+
         // Determine the 7-day range from weekEnding
         const weDate = new Date(weekEnding + 'T12:00:00')
         const weStart = new Date(weDate)
         weStart.setDate(weDate.getDate() - 6)
 
-        const sheets = await parseCashReconSheets(cashReconFile)
-        for (const sheet of sheets) {
-          // Extract date from row 1, col 3 (format: "2026-08-01 00:00:00" or "2026-08-01")
-          const dateStr = (sheet[1]?.[3] || '').split(' ')[0]
-          if (!dateStr) continue
-          const sheetDate = new Date(dateStr + 'T12:00:00')
-          if (sheetDate < weStart || sheetDate > weDate) continue
+        for (const sn of workbook.SheetNames) {
+          if (sn === 'Summary') continue
+          const rows: any[][] = XLSX.utils.sheet_to_json(workbook.Sheets[sn], { header: 1 })
 
-          const headerIdx = sheet.findIndex(r => r[0] === 'Register #')
-          if (headerIdx < 0) continue
-          const header = sheet[headerIdx]
-          const empIdx = header.indexOf('Employee Name')
-          const varIdx = header.indexOf('Total Variance')
-          if (empIdx < 0 || varIdx < 0) continue
-          for (let i = headerIdx + 1; i < sheet.length; i++) {
-            const row = sheet[i]
-            if (!row[0] || !row[0].match(/^\d+$/) || !row[empIdx]) continue
-            const variance = Math.abs(parseFloat(row[varIdx] || '0') || 0)
-            const members = findCashMembers(row[empIdx], team)
-            if (members.length === 0) continue
-            const splitVariance = variance / members.length
-            for (const m of members) {
-              if (!drawerResults[m.id]) drawerResults[m.id] = { pass: true, worstVariance: 0 }
-              if (splitVariance > 0.50) drawerResults[m.id].pass = false
-              if (splitVariance > drawerResults[m.id].worstVariance) drawerResults[m.id].worstVariance = splitVariance
+          // Check if this sheet's date falls within the week
+          const dateStr = String(rows[1]?.[3] || '').split(' ')[0]
+          if (dateStr) {
+            const sheetDate = new Date(dateStr + 'T12:00:00')
+            if (sheetDate < weStart || sheetDate > weDate) continue
+          }
+
+          // Find header row with Employee Name and Cash Variance
+          let hr = -1, nc = -1, vc = -1
+          for (let i = 0; i < Math.min(rows.length, 20); i++) {
+            const row = rows[i]; if (!row) continue
+            for (let j = 0; j < row.length; j++) {
+              const c = String(row[j] || '').toLowerCase().trim()
+              if (c.includes('employee name')) { hr = i; nc = j }
+              if (c.includes('cash variance')) vc = j
+            }
+            if (hr >= 0 && vc >= 0) break
+          }
+          if (hr < 0 || nc < 0 || vc < 0) continue
+
+          for (let i = hr + 1; i < rows.length; i++) {
+            const row = rows[i]; if (!row || !row[nc]) continue
+            const nm = String(row[nc]).trim()
+            if (!nm || nm.toLowerCase() === 'lead' || nm.toLowerCase() === 'all' || nm.toLowerCase().includes('total') || nm.toLowerCase() === 'n/a') continue
+            const v = parseVariance(row[vc])
+
+            // Handle shared drawers (e.g. "Nakoa/Brian")
+            const names = nm.includes('/') ? nm.split('/').map(x => x.trim()).filter(Boolean) : [nm]
+            const splitV = v / names.length
+
+            for (const n of names) {
+              const member = findMember(n, team)
+              if (!member) continue
+              if (!drawerResults[member.id]) drawerResults[member.id] = { pass: true, worstVariance: 0 }
+              if (Math.abs(splitV) > 0.50) drawerResults[member.id].pass = false
+              if (Math.abs(splitV) > Math.abs(drawerResults[member.id].worstVariance)) {
+                drawerResults[member.id].worstVariance = splitV
+              }
             }
           }
         }
+       }
       }
 
       // ── 5. Parse Sales Raw Data for Big Baskets (optional) ──
@@ -322,8 +366,11 @@ export default function StatsImportPage() {
           upsell_pct: upsellRate,
         }
         if (memberId in onTimeData) record.was_on_time = onTimeData[memberId]
+        // Drawer: null = no data, 0 = passed all days, >0.50 = worst variance
         if (memberId in drawerResults) {
-          record.drawer_variance = Math.round(drawerResults[memberId].worstVariance * 100) / 100
+          record.drawer_variance = Math.round(Math.abs(drawerResults[memberId].worstVariance) * 100) / 100
+        } else {
+          record.drawer_variance = null
         }
         if (memberId in bigBasketData) record.big_basket_count = bigBasketData[memberId]
         if (memberId in hoursData) record.hours_worked = Math.round(hoursData[memberId] * 100) / 100
@@ -348,7 +395,8 @@ export default function StatsImportPage() {
         members: nameList,
         extras: {
           attendance: Object.keys(onTimeData).length > 0,
-          cashRecon: Object.keys(drawerData).length > 0,
+          cashRecon: Object.keys(drawerResults).length > 0,
+          payroll: Object.keys(hoursData).length > 0,
           bigBaskets: Object.keys(bigBasketData).length > 0,
         },
       })
@@ -458,8 +506,8 @@ export default function StatsImportPage() {
                   <label style={{ display: 'block', fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 4 }}>
                     Cash Reconciliation
                   </label>
-                  <input type="file" accept={fileAccept} onChange={e => setCashReconFile(e.target.files?.[0] || null)} style={{ fontSize: 13 }} />
-                  <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>Daily Cash Reconciliation Log (drawer accuracy)</p>
+                  <input type="file" accept={fileAccept} multiple onChange={e => setCashReconFiles(e.target.files ? Array.from(e.target.files) : [])} style={{ fontSize: 13 }} />
+                  <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>Daily Cash Reconciliation Log — upload both months if the week spans two</p>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 4 }}>
