@@ -86,6 +86,7 @@ export default function StatsImportPage() {
   const [attendanceFile, setAttendanceFile] = useState<File | null>(null)
   const [cashReconFile, setCashReconFile] = useState<File | null>(null)
   const [salesRawFile, setSalesRawFile] = useState<File | null>(null)
+  const [payrollFile, setPayrollFile] = useState<File | null>(null)
   const [weekEnding, setWeekEnding] = useState('')
   const [importing, setImporting] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -248,6 +249,31 @@ export default function StatsImportPage() {
         }
       }
 
+      // ── 6. Parse Payroll Export for hours worked (optional) ──
+      const hoursData: Record<string, number> = {}
+      if (payrollFile) {
+        const payRows = await parseFile(payrollFile)
+        let payHeaderIdx = payRows.findIndex(r => r[0] === 'First Name')
+        if (payHeaderIdx < 0) payHeaderIdx = 0
+        const payHeader = payRows[payHeaderIdx]
+        const fnIdx = payHeader.indexOf('First Name')
+        const lnIdx = payHeader.indexOf('Last Name')
+        const regIdx = payHeader.indexOf('Regular')
+        const otIdx = payHeader.indexOf('OT')
+        const dotIdx = payHeader.indexOf('Double OT')
+        for (let i = payHeaderIdx + 1; i < payRows.length; i++) {
+          const row = payRows[i]
+          if (!row[fnIdx]) continue
+          const fullName = (row[fnIdx] + ' ' + (row[lnIdx] || '')).trim()
+          const member = findMember(fullName, team)
+          if (!member) continue
+          const reg = parseFloat(row[regIdx] || '0') || 0
+          const ot = parseFloat(row[otIdx] || '0') || 0
+          const dot = parseFloat(row[dotIdx] || '0') || 0
+          hoursData[member.id] = (hoursData[member.id] || 0) + reg + ot + dot
+        }
+      }
+
       // ── Combine & upsert ──
       const allMemberIds = new Set([
         ...Object.keys(aovData),
@@ -255,6 +281,7 @@ export default function StatsImportPage() {
         ...Object.keys(onTimeData),
         ...Object.keys(drawerData),
         ...Object.keys(bigBasketData),
+        ...Object.keys(hoursData),
       ])
       let imported = 0
 
@@ -283,6 +310,7 @@ export default function StatsImportPage() {
         if (memberId in onTimeData) record.was_on_time = onTimeData[memberId]
         if (memberId in drawerData) record.drawer_variance = Math.round(drawerData[memberId] * 100) / 100
         if (memberId in bigBasketData) record.big_basket_count = bigBasketData[memberId]
+        if (memberId in hoursData) record.hours_worked = Math.round(hoursData[memberId] * 100) / 100
 
         const { error: insertErr } = await supabase.from('weekly_stats').insert(record)
         if (insertErr) {
@@ -424,6 +452,13 @@ export default function StatsImportPage() {
                   <input type="file" accept={fileAccept} onChange={e => setSalesRawFile(e.target.files?.[0] || null)} style={{ fontSize: 13 }} />
                   <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>Dutchie: Sales Transactions by Date — counts baskets ${BIG_BASKET_THRESHOLD}+</p>
                 </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 4 }}>
+                    Payroll Export
+                  </label>
+                  <input type="file" accept={fileAccept} onChange={e => setPayrollFile(e.target.files?.[0] || null)} style={{ fontSize: 13 }} />
+                  <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>Homebase payroll export (hours worked for sales/hour calc)</p>
+                </div>
               </div>
             </div>
 
@@ -478,7 +513,9 @@ export default function StatsImportPage() {
                       <tr style={{ borderBottom: '2px solid #e0d9c8' }}>
                         <th style={{ textAlign: 'left', padding: '8px 12px', color: '#666' }}>Name</th>
                         <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Avg Basket</th>
+                        <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Sales/Hr</th>
                         <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Net Sales</th>
+                        <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Hours</th>
                         <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Orders</th>
                         <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Upsell %</th>
                         <th style={{ textAlign: 'center', padding: '8px 12px', color: '#666' }}>On Time</th>
@@ -491,7 +528,11 @@ export default function StatsImportPage() {
                         <tr key={s.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                           <td style={{ padding: '8px 12px', color: '#333' }}>{teamMap[s.team_member_id]?.full_name || s.team_member_id}</td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>${Number(s.average_basket).toFixed(2)}</td>
+                          <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right', fontWeight: 'bold' }}>
+                            {s.hours_worked ? `$${(Number(s.total_net_sales) / Number(s.hours_worked)).toFixed(2)}` : '—'}
+                          </td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>${Number(s.total_net_sales).toLocaleString()}</td>
+                          <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>{s.hours_worked ? Number(s.hours_worked).toFixed(1) : '—'}</td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>{s.total_orders}</td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>{Number(s.upsell_pct).toFixed(1)}%</td>
                           <td style={{ padding: '8px 12px', textAlign: 'center' }}>
