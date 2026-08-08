@@ -25,10 +25,16 @@ export default function MoodWrapper({ children }: { children: ReactNode }) {
       background: mood.bgGradient,
       fontFamily: 'Cooper Light, system-ui, sans-serif',
     }}>
-      {mood.pattern && (
+      {mood.wallpaper && (
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-          backgroundImage: mood.pattern,
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          backgroundImage: `url(${mood.wallpaper})`,
+          backgroundSize: '400px',
+          backgroundRepeat: 'repeat',
+          opacity: 0.18,
         }} />
       )}
       <div style={{ position: 'relative', zIndex: 1 }}>
