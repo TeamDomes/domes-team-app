@@ -184,9 +184,9 @@ export default function Dashboard() {
   const isHerb = currentMood === 'herb'
   const headerColor = isHerb ? '#fff' : activeMood.textColor
   const headerMuted = isHerb ? 'rgba(255,255,255,0.4)' : activeMood.mutedColor
-  const btnBg = isHerb ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-  const btnBorder = isHerb ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'
-  const btnText = isHerb ? 'rgba(255,255,255,0.6)' : activeMood.mutedColor
+  const btnBg = 'rgba(255,255,255,0.92)'
+  const btnBorder = 'rgba(0,0,0,0.12)'
+  const btnText = '#333'
   const nextTier = totalPoints < 500 ? 500 : totalPoints < 1000 ? 1000 : totalPoints < 1500 ? 1500 : null
   const tierLabel = totalPoints < 500 ? '$5 Reward' : totalPoints < 1000 ? '$15 Reward' : totalPoints < 1500 ? '$25 Reward' : 'Max Tier!'
   const progress = nextTier ? Math.min(100, Math.round((totalPoints / nextTier) * 100)) : 100
