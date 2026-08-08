@@ -280,7 +280,12 @@ export default function StatsImportPage() {
         if (memberId in drawerData) record.drawer_variance = Math.round(drawerData[memberId] * 100) / 100
         if (memberId in bigBasketData) record.big_basket_count = bigBasketData[memberId]
 
-        await supabase.from('weekly_stats').insert(record)
+        const { error: insertErr } = await supabase.from('weekly_stats').insert(record)
+        if (insertErr) {
+          console.error('Insert error for', memberId, insertErr)
+          alert('Insert failed for ' + (team.find((t: any) => t.id === memberId)?.full_name || memberId) + ': ' + insertErr.message)
+          continue
+        }
         imported++
       }
 
