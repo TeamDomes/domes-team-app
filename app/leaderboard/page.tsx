@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import MoodWrapper from '@/components/MoodWrapper'
 
 type ViewMode = 'week' | 'rolling'
 type Metric = 'salesPerHour' | 'avgBasket' | 'upsellPct'
@@ -105,9 +106,9 @@ export default function LeaderboardPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4' }}>
+    <MoodWrapper><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <p style={{ color: '#3a7b3c', fontSize: 18, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Loading...</p>
-    </div>
+    </div></MoodWrapper>
   )
 
   const uniqueWeeks = [...new Set(stats.map(s => s.week_ending))].sort().reverse()
@@ -116,7 +117,7 @@ export default function LeaderboardPage() {
     : `Last ${uniqueWeeks.length} weeks`
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
+    <MoodWrapper><div style={{ fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0); }
@@ -240,6 +241,6 @@ export default function LeaderboardPage() {
           </div>
         )}
       </div>
-    </div>
+    </div></MoodWrapper>
   )
 }

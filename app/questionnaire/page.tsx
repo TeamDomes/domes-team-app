@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { awardPoints, POINTS } from '@/lib/points'
+import MoodWrapper from '@/components/MoodWrapper'
 
 const singleQuestions = [
   { key: 'birthplace', label: 'Where were you born?', placeholder: 'City, State or Country' },
@@ -151,19 +152,19 @@ export default function QuestionnairePage() {
 
   if (saved) {
     return (
-      <div style={{ minHeight: '100vh', background: '#f4e6b4', padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <MoodWrapper><div style={{ padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <div style={{ background: 'white', borderRadius: 12, padding: 40, textAlign: 'center', maxWidth: 400 }}>
           <p style={{ fontSize: 48, margin: '0 0 16px' }}>{'\u2705'}</p>
           <h2 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', margin: '0 0 12px' }}>You did it!</h2>
           <p style={{ color: '#666', margin: '0 0 20px' }}>Your answers have been saved and trivia questions have been created from your responses. Your teammates are going to have fun guessing!</p>
           <a href="/dashboard" style={{ color: '#387dac', fontWeight: 'bold', textDecoration: 'none' }}>Back to Dashboard</a>
         </div>
-      </div>
+      </div></MoodWrapper>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f4e6b4', padding: 20 }}>
+    <MoodWrapper><div style={{ padding: 20 }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: 0 }}>
@@ -217,6 +218,6 @@ export default function QuestionnairePage() {
           {saving ? 'Saving...' : existing ? 'Update My Answers' : 'Submit'}
         </button>
       </div>
-    </div>
+    </div></MoodWrapper>
   )
 }

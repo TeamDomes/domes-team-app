@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { awardPoints, POINTS } from '@/lib/points'
+import MoodWrapper from '@/components/MoodWrapper'
 
 export default function RecapPage() {
   const [posts, setPosts] = useState<any[]>([])
@@ -99,7 +100,7 @@ export default function RecapPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f4e6b4', padding: '20px' }}>
+    <MoodWrapper><div style={{ padding: '20px' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: 0 }}>
@@ -220,6 +221,6 @@ export default function RecapPage() {
           </p>
         )}
       </div>
-    </div>
+    </div></MoodWrapper>
   )
 }

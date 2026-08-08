@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import MoodWrapper from '@/components/MoodWrapper'
 
 export default function BingoPage() {
   const [squares, setSquares] = useState<any[]>([])
@@ -27,7 +28,7 @@ export default function BingoPage() {
     load()
   }, [router])
 
-  if (loading) return (<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4' }}><p style={{ color: '#3a7b3c', fontSize: '18px' }}>Loading BINGO...</p></div>)
+  if (loading) return (<MoodWrapper><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}><p style={{ color: '#3a7b3c', fontSize: '18px' }}>Loading BINGO...</p></div></MoodWrapper>)
 
   const squareLabels: Record<string, { letter: string; name: string; desc: string }> = {
     square_b: { letter: 'B', name: 'Big Basket', desc: 'Ring up 4+ transactions over $250 (PT: 3+)' },
@@ -38,7 +39,7 @@ export default function BingoPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
+    <MoodWrapper><div style={{ fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
@@ -79,6 +80,6 @@ export default function BingoPage() {
           </div>
         )}
       </div>
-    </div>
+    </div></MoodWrapper>
   )
 }

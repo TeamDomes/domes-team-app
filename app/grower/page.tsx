@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import MoodWrapper from '@/components/MoodWrapper'
 
 export default function GrowerPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -121,13 +122,13 @@ export default function GrowerPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#f4e6b4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <MoodWrapper><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 18, color: '#543c2d' }}>Loading...</p>
-    </div>
+    </div></MoodWrapper>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f4e6b4', padding: 20 }}>
+    <MoodWrapper><div style={{ padding: 20 }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <a href="/dashboard" style={{ color: '#3a7b3c', textDecoration: 'none', fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14 }}>
           {'←'} Back to Dashboard
@@ -360,6 +361,6 @@ export default function GrowerPage() {
           </div>
         )}
       </div>
-    </div>
+    </div></MoodWrapper>
   )
 }

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import MoodWrapper from '@/components/MoodWrapper'
 export default function WallOfLovePage() {
   const [reviews, setReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -23,10 +24,10 @@ export default function WallOfLovePage() {
     }
     load()
   }, [router])
-  if (loading) return (<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4' }}><p style={{ color: '#3a7b3c', fontSize: '18px' }}>Loading...</p></div>)
+  if (loading) return (<MoodWrapper><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}><p style={{ color: '#3a7b3c', fontSize: '18px' }}>Loading...</p></div></MoodWrapper>)
   const stars = (n: number) => '⭐'.repeat(n)
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
+    <MoodWrapper><div style={{ fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h1 style={{ color: '#3a7b3c', fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Wall of Love</h1>
@@ -51,6 +52,6 @@ export default function WallOfLovePage() {
           ))}
         </div>
       </div>
-    </div>
+    </div></MoodWrapper>
   )
 }

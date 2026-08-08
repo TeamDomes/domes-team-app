@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { awardPoints, POINTS } from '@/lib/points'
+import MoodWrapper from '@/components/MoodWrapper'
 
 export default function TriviaPage() {
   const [teamMember, setTeamMember] = useState<any>(null)
@@ -84,9 +85,9 @@ export default function TriviaPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4' }}>
+    <MoodWrapper><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <p style={{ color: '#3a7b3c', fontSize: 18, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Loading...</p>
-    </div>
+    </div></MoodWrapper>
   )
 
   const optionStyle = (letter: string) => {
@@ -104,7 +105,7 @@ export default function TriviaPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
+    <MoodWrapper><div style={{ fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <a href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 14 }}>{'<-'} Dashboard</a>
@@ -159,6 +160,6 @@ export default function TriviaPage() {
           )}
         </div>
       </div>
-    </div>
+    </div></MoodWrapper>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import MoodWrapper from '@/components/MoodWrapper'
 
 export default function MyStatsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -115,9 +116,11 @@ export default function MyStatsPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4' }}>
-      <p style={{ color: '#3a7b3c', fontSize: 18, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Loading...</p>
-    </div>
+    <MoodWrapper>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#3a7b3c', fontSize: 18, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Loading...</p>
+      </div>
+    </MoodWrapper>
   )
 
   const latest = stats[0]
@@ -278,7 +281,8 @@ export default function MyStatsPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
+    <MoodWrapper>
+      <div style={{ padding: 20 }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
@@ -459,6 +463,7 @@ export default function MyStatsPage() {
           </>
         )}
       </div>
-    </div>
+      </div>
+    </MoodWrapper>
   )
 }

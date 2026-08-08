@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { awardPoints, POINTS } from '@/lib/points'
+import MoodWrapper from '@/components/MoodWrapper'
 
 const CANNABIS_WORDS = [
   'KUSH', 'HASH', 'DABS', 'HEMP', 'BONG', 'DANK', 'NUBS',
@@ -191,9 +192,9 @@ export default function WordlePage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4e6b4' }}>
+    <MoodWrapper><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <p style={{ color: '#3a7b3c', fontSize: 18, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Loading...</p>
-    </div>
+    </div></MoodWrapper>
   )
 
   const keyboard = [
@@ -217,7 +218,7 @@ export default function WordlePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
+    <MoodWrapper><div style={{ fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
       <div style={{ maxWidth: 500, margin: '0 auto', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <a href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 14 }}>{'<-'} Dashboard</a>
@@ -341,6 +342,6 @@ export default function WordlePage() {
           }
         `}</style>
       </div>
-    </div>
+    </div></MoodWrapper>
   )
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { awardPoints, POINTS } from '@/lib/points'
+import { MOODS, MOOD_KEYS, DEFAULT_MOOD, type MoodKey } from '@/lib/moods'
 
 /* ── icon map (Tabler icon class names) ── */
 const navItems = [
@@ -59,6 +60,8 @@ export default function Dashboard() {
   const [hasQuestionnaire, setHasQuestionnaire] = useState(true)
   const [leaderboard, setLeaderboard] = useState<Record<string, { name: string; value: number }[]>>({})
   const [lbWeek, setLbWeek] = useState('')
+  const [currentMood, setCurrentMood] = useState<MoodKey>(DEFAULT_MOOD)
+  const [showMoodPicker, setShowMoodPicker] = useState(false)
 
   useEffect(() => {
     async function loadUser() {
@@ -68,6 +71,9 @@ export default function Dashboard() {
       const { data: member } = await supabase.from('team').select('*').eq('email', user.email).single()
       if (member) {
         setTeamMember(member)
+        if (member.current_mood && MOODS[member.current_mood as MoodKey]) {
+          setCurrentMood(member.current_mood as MoodKey)
+        }
         if (!member.auth_user_id) { await supabase.from('team').update({ auth_user_id: user.id }).eq('id', member.id) }
         await loadPoints(member.id)
         await checkQuestionnaire(member.id)
@@ -250,12 +256,67 @@ export default function Dashboard() {
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0 }}>{role}{type ? ` · ${type}` : ''}</p>
               </div>
             </div>
-            <button onClick={handleSignOut} style={{
-              background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.15)',
-              color: 'rgba(255,255,255,0.4)', padding: '7px 16px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
-              fontFamily: 'Cooper Light, system-ui, sans-serif',
-            }}>Sign Out</button>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={() => setShowMoodPicker(!showMoodPicker)} style={{
+                background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.6)', padding: '7px 12px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
+                fontFamily: 'Cooper Light, system-ui, sans-serif',
+              }}>{MOODS[currentMood].emoji} Mood</button>
+              <button onClick={handleSignOut} style={{
+                background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.4)', padding: '7px 16px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
+                fontFamily: 'Cooper Light, system-ui, sans-serif',
+              }}>Sign Out</button>
+            </div>
           </div>
+
+          {/* Mood Picker */}
+          {showMoodPicker && (
+            <div style={{
+              background: 'rgba(20,40,32,0.95)', borderRadius: 14, padding: 20, marginBottom: 16,
+              backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: 1.5, textTransform: 'uppercase' as const }}>
+                Current Mood
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                {MOOD_KEYS.map(key => {
+                  const mood = MOODS[key]
+                  const isActive = key === currentMood
+                  return (
+                    <button
+                      key={key}
+                      onClick={async () => {
+                        setCurrentMood(key)
+                        setShowMoodPicker(false)
+                        if (teamMember) {
+                          await supabase.from('team').update({ current_mood: key }).eq('id', teamMember.id)
+                        }
+                      }}
+                      style={{
+                        background: isActive ? mood.accent : mood.bg,
+                        border: isActive ? `2px solid ${mood.accent}` : '2px solid transparent',
+                        borderRadius: 10, padding: '12px 8px', cursor: 'pointer',
+                        textAlign: 'center', transition: 'transform 0.15s',
+                      }}
+                    >
+                      <span style={{ fontSize: 24, display: 'block', marginBottom: 4 }}>{mood.emoji}</span>
+                      <span style={{
+                        fontSize: 11, fontFamily: 'Cooper Black, serif',
+                        color: isActive ? '#fff' : mood.textColor,
+                        display: 'block',
+                      }}>{mood.label}</span>
+                      <span style={{
+                        fontSize: 9, color: isActive ? 'rgba(255,255,255,0.7)' : mood.mutedColor,
+                        display: 'block', marginTop: 2,
+                      }}>{mood.tagline}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Celebrations */}
           {celebrations.map((c, i) => (
