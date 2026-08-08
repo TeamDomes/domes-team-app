@@ -113,6 +113,9 @@ export default function StatsImportPage() {
   const [importing, setImporting] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [existingStats, setExistingStats] = useState<any[]>([])
+  const [samplesFile, setSamplesFile] = useState<File | null>(null)
+  const [importingSamples, setImportingSamples] = useState(false)
+  const [samplesResult, setSamplesResult] = useState<any>(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -135,6 +138,87 @@ export default function StatsImportPage() {
       .limit(50)
     setExistingStats(stats || [])
     setLoading(false)
+  }
+
+  async function handleSamplesImport() {
+    if (!samplesFile) return
+    setImportingSamples(true)
+    setSamplesResult(null)
+    try {
+      const buffer = await samplesFile.arrayBuffer()
+      const workbook = XLSX.read(buffer, { type: 'array' })
+      const productNames = new Set<string>()
+
+      for (const sheetName of workbook.SheetNames) {
+        if (sheetName.toLowerCase() === 'template') continue
+        const sheet = workbook.Sheets[sheetName]
+        const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
+
+        // Check if this is a date-style sheet (Budtender, Samples given, Feedback)
+        const header = rows[0]?.map((c: any) => String(c).toLowerCase().trim()) || []
+        const samplesIdx = header.findIndex((h: string) => h.includes('samples given') || h.includes('sample'))
+
+        if (samplesIdx >= 0) {
+          // Date sheet: extract product names from "Samples given" column
+          for (let i = 1; i < rows.length; i++) {
+            const val = String(rows[i]?.[samplesIdx] || '').trim()
+            if (!val || val === 'NaN') continue
+            // Could be comma-separated or newline-separated
+            const items = val.split(/[,\n]+/).map((s: string) => s.trim()).filter(Boolean)
+            items.forEach((item: string) => { if (item.length > 2) productNames.add(item) })
+          }
+          continue
+        }
+
+        // Revelry-style sheet: look for Brand/Description columns in various sub-tables
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i]
+          if (!row) continue
+          // Find header rows with "Brand" and "Description"
+          const brandIdx = row.findIndex((c: any) => String(c).toLowerCase().trim() === 'brand')
+          const descIdx = row.findIndex((c: any) => String(c).toLowerCase().trim() === 'description')
+          if (brandIdx >= 0) {
+            // Read rows below this header until blank
+            for (let j = i + 1; j < rows.length; j++) {
+              const dataRow = rows[j]
+              const brand = String(dataRow?.[brandIdx] || '').trim()
+              if (!brand || brand === 'NaN' || brand.toLowerCase().includes('total')) break
+              const desc = descIdx >= 0 ? String(dataRow?.[descIdx] || '').trim() : ''
+              const fullName = desc && desc !== 'NaN' ? `${brand} - ${desc}` : brand
+              if (fullName.length > 2) productNames.add(fullName)
+            }
+          }
+        }
+
+        // Individual budtender sheets: check for product-like data in any column
+        if (sheetName.length <= 10 && !sheetName.includes('.')) {
+          for (let i = 0; i < rows.length; i++) {
+            for (let j = 0; j < (rows[i]?.length || 0); j++) {
+              const val = String(rows[i][j] || '').trim()
+              if (val.includes(' - ') && val.length > 5 && val !== 'NaN') {
+                productNames.add(val)
+              }
+            }
+          }
+        }
+      }
+
+      // Insert into products table
+      let inserted = 0
+      for (const name of productNames) {
+        const brand = name.includes(' - ') ? name.split(' - ')[0].trim() : name
+        const { error } = await supabase.from('products').upsert(
+          { name, brand, source: 'sample', is_active: true },
+          { onConflict: 'name' }
+        )
+        if (!error) inserted++
+      }
+
+      setSamplesResult({ total: productNames.size, inserted })
+    } catch (err: any) {
+      alert('Error importing samples: ' + err.message)
+    }
+    setImportingSamples(false)
   }
 
   async function handleImport() {
@@ -565,6 +649,38 @@ export default function StatsImportPage() {
                   {result.extras.bigBaskets ? ' big-baskets' : ''}
                 </p>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* Samples Tracker Import */}
+        <div style={{ background: 'white', borderRadius: 12, padding: 24, marginBottom: 24 }}>
+          <h2 style={{ fontFamily: 'Cooper Black, serif', color: '#543c2d', fontSize: 18, margin: '0 0 8px' }}>
+            Samples Tracker Upload
+          </h2>
+          <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>
+            Upload the Samples Tracker spreadsheet to add sample products to the Staff Reviews dropdown.
+          </p>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input type="file" accept=".xlsx,.xls" onChange={e => setSamplesFile(e.target.files?.[0] || null)} style={{ fontSize: 13 }} />
+            <button
+              onClick={handleSamplesImport}
+              disabled={!samplesFile || importingSamples}
+              style={{
+                background: !samplesFile ? '#ccc' : '#f37029',
+                color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px',
+                fontFamily: 'Cooper Black, serif', fontSize: 14,
+                cursor: !samplesFile ? 'default' : 'pointer',
+              }}
+            >
+              {importingSamples ? 'Importing...' : 'Import Samples'}
+            </button>
+          </div>
+          {samplesResult && (
+            <div style={{ marginTop: 12, background: '#fff3e0', borderRadius: 8, padding: 12 }}>
+              <p style={{ margin: 0, fontSize: 14, color: '#f37029', fontFamily: 'Cooper Black, serif' }}>
+                Found {samplesResult.total} products, added {samplesResult.inserted} to the reviews dropdown
+              </p>
             </div>
           )}
         </div>

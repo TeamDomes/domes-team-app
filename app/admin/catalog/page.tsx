@@ -109,12 +109,31 @@ export default function CatalogImportPage() {
         }
       }
 
+      // Also populate products table for Staff Reviews dropdown
+      const categoryIdx = header.findIndex(h => h.toLowerCase().includes('category') || h.toLowerCase().includes('mastercategory'))
+      let productsAdded = 0
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delimiter)
+        const product = cols[productIdx]?.trim()
+        if (!product) continue
+        const isRetired = retiredIdx >= 0 && cols[retiredIdx]?.trim().toLowerCase() === 'yes'
+        if (isRetired) continue
+        const brand = product.split('|')[0].trim()
+        const category = categoryIdx >= 0 ? cols[categoryIdx]?.trim() : ''
+        const { error } = await supabase.from('products').upsert(
+          { name: product, brand, category, source: 'catalog', is_active: true },
+          { onConflict: 'name' }
+        )
+        if (!error) productsAdded++
+      }
+
       setResult({
         totalProducts: lines.length - 1,
         activeBrands: brandSet.size,
         retiredBrands: retiredBrands.size,
         newBrands: newBrands.length,
-        newBrandNames: newBrands
+        newBrandNames: newBrands,
+        productsAdded,
       })
 
       // Reload brands list
@@ -204,6 +223,9 @@ export default function CatalogImportPage() {
             </p>
             <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#3a7b3c', margin: '4px 0', fontWeight: 'bold' }}>
               New brands added: {result.newBrands}
+            </p>
+            <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#333', margin: '4px 0' }}>
+              Products added to reviews: {result.productsAdded}
             </p>
             {result.newBrandNames && result.newBrandNames.length > 0 && (
               <div style={{ marginTop: 10 }}>

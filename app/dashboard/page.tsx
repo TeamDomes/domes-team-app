@@ -17,6 +17,7 @@ const navItems = [
   { label: 'Recap',         href: '/recap',           icon: 'ti-confetti',        desc: 'Weekly wins',       bg: '#3a7b3c', text: '#fff' },
   { label: 'Grower',        href: '/grower',          icon: 'ti-plant',           desc: 'Brand spotlight',   bg: '#543c2d', text: '#f4e6b4' },
   { label: 'Wall of Love',  href: '/wall-of-love',    icon: 'ti-star',            desc: 'Google reviews',    bg: '#ffcb1f', text: '#543c2d' },
+  { label: 'Reviews',       href: '/reviews',          icon: 'ti-message-star',    desc: 'Product reviews',   bg: '#2d6b9e', text: '#fff' },
 ]
 
 /* ── scattered dome triangles (SVG) ── */
