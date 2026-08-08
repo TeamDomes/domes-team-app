@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import * as XLSX from 'xlsx'
 
 export default function CatalogImportPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -40,13 +41,28 @@ export default function CatalogImportPage() {
     setResult(null)
 
     try {
-      const text = await file.text()
-      // Parse CSV - handle both comma and tab delimited
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l)
+      // Parse file — support CSV, TSV, and XLSX
+      let lines: string[] = []
+      let delimiter = ','
+      const isExcel = file.name.match(/\.xlsx?$/i)
+
+      if (isExcel) {
+        const buf = await file.arrayBuffer()
+        const wb = XLSX.read(buf, { type: 'array' })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        const csv = XLSX.utils.sheet_to_csv(ws)
+        lines = csv.split('\n').map(l => l.trim()).filter(l => l)
+        delimiter = ','
+      } else {
+        const text = await file.text()
+        lines = text.split('\n').map(l => l.trim()).filter(l => l)
+        delimiter = lines[0]?.includes('\t') ? '\t' : ','
+      }
+
       if (lines.length === 0) { setResult({ error: 'Empty file' }); setImporting(false); return }
 
       // Find header row
-      const header = lines[0].includes('\t') ? lines[0].split('\t') : lines[0].split(',')
+      const header = lines[0].split(delimiter)
       const productIdx = header.findIndex(h => h.toLowerCase().includes('product'))
       const retiredIdx = header.findIndex(h => h.toLowerCase().includes('retired'))
 
@@ -57,7 +73,6 @@ export default function CatalogImportPage() {
       }
 
       // Extract brand names from Product column (everything before first |)
-      const delimiter = lines[0].includes('\t') ? '\t' : ','
       const brandSet = new Set<string>()
       const retiredBrands = new Set<string>()
 
@@ -172,7 +187,7 @@ export default function CatalogImportPage() {
           Product Catalog Import
         </h1>
         <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#666', marginBottom: 20 }}>
-          Upload your Dutchie Product Catalog (.csv) to automatically detect new brands.
+          Upload your Dutchie Product Catalog (.csv or .xlsx) to automatically detect new brands.
           The importer looks at the Product column and extracts brand names (everything before the | symbol).
           Brands marked RETIRED will be deactivated.
         </p>
@@ -184,7 +199,7 @@ export default function CatalogImportPage() {
         }}>
           <input
             type="file"
-            accept=".csv,.tsv,.txt"
+            accept=".csv,.tsv,.txt,.xlsx,.xls"
             onChange={e => setFile(e.target.files?.[0] || null)}
             style={{ marginBottom: 15, fontFamily: 'Cooper Light, Georgia, serif' }}
           />
