@@ -233,7 +233,7 @@ export default function Dashboard() {
         backgroundImage: `url(${activeMood.wallpaper})`,
         backgroundSize: currentMood === 'herb' ? '340px' : '400px',
         backgroundRepeat: 'repeat',
-        opacity: currentMood === 'herb' ? 0.45 : 0.27,
+        opacity: currentMood === 'herb' ? 0.45 : 0.40,
         filter: currentMood === 'herb' ? 'saturate(1.2) brightness(1.1)' : undefined,
       }} />
 
@@ -318,8 +318,9 @@ export default function Dashboard() {
                         display: 'block',
                       }}>{mood.label}</span>
                       <span style={{
-                        fontSize: 9, color: isActive ? 'rgba(255,255,255,0.7)' : mood.mutedColor,
-                        display: 'block', marginTop: 2,
+                        fontSize: 11, fontFamily: 'TAY Bone Quixote, Cooper Black, serif',
+                        color: isActive ? 'rgba(255,255,255,0.85)' : mood.mutedColor,
+                        display: 'block', marginTop: 3,
                       }}>{mood.tagline}</span>
                     </button>
                   )
