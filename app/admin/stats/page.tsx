@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import * as XLSX from 'xlsx'
 
 const DUTCHIE_NAME_MAP: Record<string, string> = {
   'Audrey M.': 'audrey',
@@ -32,6 +33,19 @@ function parseCSV(text: string): string[][] {
     cols.push(cur.trim())
     return cols
   })
+}
+
+async function parseFile(file: File): Promise<string[][]> {
+  const name = file.name.toLowerCase()
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    const buffer = await file.arrayBuffer()
+    const workbook = XLSX.read(buffer, { type: 'array' })
+    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+    const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
+    return rows.map(r => r.map(c => String(c).trim()))
+  }
+  const text = await file.text()
+  return parseCSV(text)
 }
 
 export default function StatsImportPage() {
@@ -74,11 +88,8 @@ export default function StatsImportPage() {
 
     setImporting(true)
     try {
-      const aovText = await aovFile.text()
-      const upsellText = await upsellFile.text()
-
-      const aovRows = parseCSV(aovText)
-      const upsellRows = parseCSV(upsellText)
+      const aovRows = await parseFile(aovFile)
+      const upsellRows = await parseFile(upsellFile)
 
       // Find header rows (look for "Budtender Name" or "Budtender")
       let aovHeaderIdx = aovRows.findIndex(r => r[0]?.includes('Budtender'))
@@ -210,7 +221,7 @@ export default function StatsImportPage() {
             Import Dutchie Reports
           </h2>
           <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>
-            Download the AOV report and Fulfillment Upsell report from Dutchie, then upload both CSVs below.
+            Download the AOV report and Fulfillment Upsell report from Dutchie, then upload both files below (CSV or Excel).
           </p>
 
           <div style={{ display: 'grid', gap: 16 }}>
@@ -228,11 +239,11 @@ export default function StatsImportPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 4 }}>
-                AOV Report (CSV)
+                AOV Report (CSV or Excel)
               </label>
               <input
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx,.xls"
                 onChange={e => setAovFile(e.target.files?.[0] || null)}
                 style={{ fontSize: 13 }}
               />
@@ -241,11 +252,11 @@ export default function StatsImportPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 4 }}>
-                Fulfillment Upsell Report (CSV)
+                Fulfillment Upsell Report (CSV or Excel)
               </label>
               <input
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx,.xls"
                 onChange={e => setUpsellFile(e.target.files?.[0] || null)}
                 style={{ fontSize: 13 }}
               />
