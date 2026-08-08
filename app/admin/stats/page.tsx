@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import * as XLSX from 'xlsx'
 
-const BIG_BASKET_THRESHOLD = 100
+const BIG_BASKET_THRESHOLD = 250
 
 // Match a report name to a team member by first name
 function findMember(reportName: string, team: any[]): any | null {
@@ -232,9 +232,13 @@ export default function StatsImportPage() {
         const salesHeader = salesRows[salesHeaderIdx]
         const nameIdx = salesHeader.indexOf('FullName')
         const totalIdx = salesHeader.indexOf('InvoiceTotal')
+        const orderTypeIdx = salesHeader.indexOf('OrderType')
         for (let i = salesHeaderIdx + 1; i < salesRows.length; i++) {
           const row = salesRows[i]
           if (!row[nameIdx]) continue
+          // Only count In-Store sales, not online pre-orders
+          const orderType = (row[orderTypeIdx] || '').toLowerCase()
+          if (orderType !== 'in-store') continue
           const member = findMember(row[nameIdx], team)
           if (!member) continue
           const total = parseFloat(row[totalIdx] || '0') || 0
