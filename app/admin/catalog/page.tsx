@@ -41,61 +41,57 @@ export default function CatalogImportPage() {
     setResult(null)
 
     try {
-      // Parse file — support CSV, TSV, and XLSX
-      let lines: string[] = []
-      let delimiter = ','
+      // Parse file into rows (array of string arrays)
+      let rows: string[][] = []
       const isExcel = file.name.match(/\.xlsx?$/i)
 
       if (isExcel) {
         const buf = await file.arrayBuffer()
         const wb = XLSX.read(buf, { type: 'array' })
         const ws = wb.Sheets[wb.SheetNames[0]]
-        const csv = XLSX.utils.sheet_to_csv(ws)
-        lines = csv.split('\n').map(l => l.trim()).filter(l => l)
-        delimiter = ','
+        const raw: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+        rows = raw.map(r => r.map((c: any) => String(c ?? '').trim()))
       } else {
         const text = await file.text()
-        lines = text.split('\n').map(l => l.trim()).filter(l => l)
-        delimiter = lines[0]?.includes('\t') ? '\t' : ','
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l)
+        const delimiter = lines[0]?.includes('\t') ? '\t' : ','
+        rows = lines.map(l => l.split(delimiter).map(c => c.trim()))
       }
 
-      if (lines.length === 0) { setResult({ error: 'Empty file' }); setImporting(false); return }
+      if (rows.length === 0) { setResult({ error: 'Empty file' }); setImporting(false); return }
 
       // Find the header row (scan for a row containing "Product")
-      let headerRowIdx = 0
-      for (let i = 0; i < Math.min(lines.length, 20); i++) {
-        const cols = lines[i].split(delimiter)
-        if (cols.some(c => c.trim().toLowerCase() === 'product')) {
+      let headerRowIdx = -1
+      for (let i = 0; i < Math.min(rows.length, 20); i++) {
+        if (rows[i].some(c => c.toLowerCase() === 'product')) {
           headerRowIdx = i
           break
         }
       }
 
-      const header = lines[headerRowIdx].split(delimiter)
-      const productIdx = header.findIndex(h => h.trim().toLowerCase() === 'product')
-      const retiredIdx = header.findIndex(h => h.trim().toLowerCase().includes('retired'))
-      // Remove metadata rows before header
-      lines = lines.slice(headerRowIdx)
-
-      if (productIdx === -1) {
+      if (headerRowIdx === -1) {
         setResult({ error: 'Could not find "Product" column. Make sure your file has a Product column header.' })
         setImporting(false)
         return
       }
 
+      const header = rows[headerRowIdx]
+      const productIdx = header.findIndex(h => h.toLowerCase() === 'product')
+      const retiredIdx = header.findIndex(h => h.toLowerCase().includes('retired'))
+      const dataRows = rows.slice(headerRowIdx + 1)
+
       // Extract brand names from Product column (everything before first |)
       const brandSet = new Set<string>()
       const retiredBrands = new Set<string>()
 
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(delimiter)
-        const product = cols[productIdx]?.trim()
+      for (const cols of dataRows) {
+        const product = cols[productIdx]
         if (!product) continue
 
         const brandName = product.split('|')[0].trim()
         if (!brandName) continue
 
-        const isRetired = retiredIdx >= 0 && cols[retiredIdx]?.trim().toLowerCase() === 'yes'
+        const isRetired = retiredIdx >= 0 && cols[retiredIdx]?.toLowerCase() === 'yes'
         if (isRetired) {
           retiredBrands.add(brandName)
         } else {
@@ -138,14 +134,13 @@ export default function CatalogImportPage() {
       // Also populate products table for Staff Reviews dropdown
       const categoryIdx = header.findIndex(h => h.toLowerCase().includes('category') || h.toLowerCase().includes('mastercategory'))
       let productsAdded = 0
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(delimiter)
-        const product = cols[productIdx]?.trim()
+      for (const cols of dataRows) {
+        const product = cols[productIdx]
         if (!product) continue
-        const isRetired = retiredIdx >= 0 && cols[retiredIdx]?.trim().toLowerCase() === 'yes'
+        const isRetired = retiredIdx >= 0 && cols[retiredIdx]?.toLowerCase() === 'yes'
         if (isRetired) continue
         const brand = product.split('|')[0].trim()
-        const category = categoryIdx >= 0 ? cols[categoryIdx]?.trim() : ''
+        const category = categoryIdx >= 0 ? (cols[categoryIdx] || '') : ''
         const { error } = await supabase.from('products').upsert(
           { name: product, brand, category, source: 'catalog', is_active: true },
           { onConflict: 'name' }
@@ -154,7 +149,7 @@ export default function CatalogImportPage() {
       }
 
       setResult({
-        totalProducts: lines.length - 1,
+        totalProducts: dataRows.length,
         activeBrands: brandSet.size,
         retiredBrands: retiredBrands.size,
         newBrands: newBrands.length,
