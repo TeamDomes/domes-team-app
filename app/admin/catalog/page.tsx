@@ -199,7 +199,7 @@ export default function CatalogImportPage() {
         }}>
           <input
             type="file"
-            accept=".csv,.tsv,.txt,.xlsx,.xls"
+            accept=".csv,.tsv,.txt,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
             onChange={e => setFile(e.target.files?.[0] || null)}
             style={{ marginBottom: 15, fontFamily: 'Cooper Light, Georgia, serif' }}
           />
