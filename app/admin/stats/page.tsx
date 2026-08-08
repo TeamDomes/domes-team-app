@@ -200,10 +200,22 @@ export default function StatsImportPage() {
       }
 
       // ── 4. Parse Cash Reconciliation (optional) ──
-      const drawerData: Record<string, number> = {}
+      // Track per-member: did every relevant day have variance <= $0.50?
+      const drawerResults: Record<string, { pass: boolean; worstVariance: number }> = {}
       if (cashReconFile) {
+        // Determine the 7-day range from weekEnding
+        const weDate = new Date(weekEnding + 'T12:00:00')
+        const weStart = new Date(weDate)
+        weStart.setDate(weDate.getDate() - 6)
+
         const sheets = await parseCashReconSheets(cashReconFile)
         for (const sheet of sheets) {
+          // Extract date from row 1, col 3 (format: "2026-08-01 00:00:00" or "2026-08-01")
+          const dateStr = (sheet[1]?.[3] || '').split(' ')[0]
+          if (!dateStr) continue
+          const sheetDate = new Date(dateStr + 'T12:00:00')
+          if (sheetDate < weStart || sheetDate > weDate) continue
+
           const headerIdx = sheet.findIndex(r => r[0] === 'Register #')
           if (headerIdx < 0) continue
           const header = sheet[headerIdx]
@@ -213,12 +225,14 @@ export default function StatsImportPage() {
           for (let i = headerIdx + 1; i < sheet.length; i++) {
             const row = sheet[i]
             if (!row[0] || !row[0].match(/^\d+$/) || !row[empIdx]) continue
-            const variance = parseFloat(row[varIdx] || '0') || 0
+            const variance = Math.abs(parseFloat(row[varIdx] || '0') || 0)
             const members = findCashMembers(row[empIdx], team)
             if (members.length === 0) continue
-            const splitVariance = Math.abs(variance) / members.length
+            const splitVariance = variance / members.length
             for (const m of members) {
-              drawerData[m.id] = (drawerData[m.id] || 0) + splitVariance
+              if (!drawerResults[m.id]) drawerResults[m.id] = { pass: true, worstVariance: 0 }
+              if (splitVariance > 0.50) drawerResults[m.id].pass = false
+              if (splitVariance > drawerResults[m.id].worstVariance) drawerResults[m.id].worstVariance = splitVariance
             }
           }
         }
@@ -279,7 +293,7 @@ export default function StatsImportPage() {
         ...Object.keys(aovData),
         ...Object.keys(upsellData),
         ...Object.keys(onTimeData),
-        ...Object.keys(drawerData),
+        ...Object.keys(drawerResults),
         ...Object.keys(bigBasketData),
         ...Object.keys(hoursData),
       ])
@@ -308,7 +322,9 @@ export default function StatsImportPage() {
           upsell_pct: upsellRate,
         }
         if (memberId in onTimeData) record.was_on_time = onTimeData[memberId]
-        if (memberId in drawerData) record.drawer_variance = Math.round(drawerData[memberId] * 100) / 100
+        if (memberId in drawerResults) {
+          record.drawer_variance = Math.round(drawerResults[memberId].worstVariance * 100) / 100
+        }
         if (memberId in bigBasketData) record.big_basket_count = bigBasketData[memberId]
         if (memberId in hoursData) record.hours_worked = Math.round(hoursData[memberId] * 100) / 100
 
@@ -519,7 +535,7 @@ export default function StatsImportPage() {
                         <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Orders</th>
                         <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Upsell %</th>
                         <th style={{ textAlign: 'center', padding: '8px 12px', color: '#666' }}>On Time</th>
-                        <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Drawer $</th>
+                        <th style={{ textAlign: 'center', padding: '8px 12px', color: '#666' }}>Drawer</th>
                         <th style={{ textAlign: 'right', padding: '8px 12px', color: '#666' }}>Big Baskets</th>
                       </tr>
                     </thead>
@@ -538,8 +554,10 @@ export default function StatsImportPage() {
                           <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                             {s.was_on_time === true ? '✅' : s.was_on_time === false ? '❌' : '—'}
                           </td>
-                          <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>
-                            {s.drawer_variance != null ? `$${Number(s.drawer_variance).toFixed(2)}` : '—'}
+                          <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                            {s.drawer_variance != null
+                              ? (Number(s.drawer_variance) <= 0.50 ? '✅' : `❌ $${Number(s.drawer_variance).toFixed(2)}`)
+                              : '—'}
                           </td>
                           <td style={{ padding: '8px 12px', color: '#333', textAlign: 'right' }}>
                             {s.big_basket_count != null ? s.big_basket_count : '—'}

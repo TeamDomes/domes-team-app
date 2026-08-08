@@ -144,11 +144,14 @@ export default function StatsOverviewPage() {
                 <thead>
                   <tr style={{ borderBottom: '2px solid #e0d9c8' }}>
                     <th style={{ textAlign: 'left', padding: '10px 12px', color: '#666', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>Name</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', color: '#666' }}>Sales/Hr</th>
                     <th style={{ textAlign: 'right', padding: '10px 12px', color: '#666' }}>Avg Basket</th>
                     <th style={{ textAlign: 'right', padding: '10px 12px', color: '#666' }}>Net Sales</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', color: '#666' }}>Hours</th>
                     <th style={{ textAlign: 'right', padding: '10px 12px', color: '#666' }}>Orders</th>
                     <th style={{ textAlign: 'right', padding: '10px 12px', color: '#666' }}>Upsell %</th>
                     <th style={{ textAlign: 'center', padding: '10px 12px', color: '#666' }}>On Time</th>
+                    <th style={{ textAlign: 'center', padding: '10px 12px', color: '#666' }}>Drawer</th>
                     <th style={{ textAlign: 'center', padding: '10px 12px', color: '#666' }}>Review</th>
                   </tr>
                 </thead>
@@ -162,11 +165,17 @@ export default function StatsOverviewPage() {
                           {member?.full_name || s.team_member_id}
                           {member?.role && <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>{member.role}</span>}
                         </td>
+                        <td style={{ padding: '10px 12px', textAlign: 'right', color: '#333', fontWeight: 'bold' }}>
+                          {s.hours_worked ? `$${(Number(s.total_net_sales) / Number(s.hours_worked)).toFixed(2)}` : '—'}
+                        </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', color: '#333' }}>
                           ${Number(s.average_basket).toFixed(2)}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', color: '#333' }}>
                           ${Number(s.total_net_sales).toLocaleString()}
+                        </td>
+                        <td style={{ padding: '10px 12px', textAlign: 'right', color: '#333' }}>
+                          {s.hours_worked ? Number(s.hours_worked).toFixed(1) : '—'}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', color: '#333' }}>
                           {s.total_orders}
@@ -175,7 +184,12 @@ export default function StatsOverviewPage() {
                           {Number(s.upsell_pct).toFixed(1)}%
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                          {s.was_on_time ? <span style={{ color: '#3a7b3c' }}>{'✅'}</span> : <span style={{ color: '#ccc' }}>{'—'}</span>}
+                          {s.was_on_time ? '✅' : <span style={{ color: '#ccc' }}>{'—'}</span>}
+                        </td>
+                        <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                          {s.drawer_variance != null
+                            ? (Number(s.drawer_variance) <= 0.50 ? '✅' : `❌`)
+                            : '—'}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                           {s.got_named_in_review ? <span>{'⭐'}</span> : <span style={{ color: '#ccc' }}>{'—'}</span>}

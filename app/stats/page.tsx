@@ -111,9 +111,19 @@ export default function MyStatsPage() {
                 prevValue={previous ? parseFloat('$' + Number(previous.average_basket).toFixed(2)) : undefined}
               />
               <StatCard
+                label="Sales / Hour"
+                value={latest.hours_worked ? '$' + (Number(latest.total_net_sales) / Number(latest.hours_worked)).toFixed(2) : '—'}
+                prevValue={previous?.hours_worked ? Number(previous.total_net_sales) / Number(previous.hours_worked) : undefined}
+              />
+              <StatCard
                 label="Total Net Sales"
                 value={'$' + Number(latest.total_net_sales).toLocaleString()}
                 prevValue={previous ? Number(previous.total_net_sales) : undefined}
+              />
+              <StatCard
+                label="Hours Worked"
+                value={latest.hours_worked ? Number(latest.hours_worked).toFixed(1) : '—'}
+                prevValue={previous?.hours_worked ? Number(previous.hours_worked) : undefined}
               />
               <StatCard
                 label="Total Orders"
@@ -159,8 +169,10 @@ export default function MyStatsPage() {
                     <thead>
                       <tr style={{ borderBottom: '2px solid #e0d9c8' }}>
                         <th style={{ textAlign: 'left', padding: '8px 10px', color: '#666' }}>Week</th>
+                        <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Sales/Hr</th>
                         <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Avg Basket</th>
                         <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Net Sales</th>
+                        <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Hours</th>
                         <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Orders</th>
                         <th style={{ textAlign: 'right', padding: '8px 10px', color: '#666' }}>Upsell %</th>
                       </tr>
@@ -171,11 +183,17 @@ export default function MyStatsPage() {
                           <td style={{ padding: '8px 10px', color: '#333' }}>
                             {new Date(s.week_ending + 'T12:00:00').toLocaleDateString()}
                           </td>
+                          <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right', fontWeight: 'bold' }}>
+                            {s.hours_worked ? `$${(Number(s.total_net_sales) / Number(s.hours_worked)).toFixed(2)}` : '—'}
+                          </td>
                           <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
                             ${Number(s.average_basket).toFixed(2)}
                           </td>
                           <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
                             ${Number(s.total_net_sales).toLocaleString()}
+                          </td>
+                          <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
+                            {s.hours_worked ? Number(s.hours_worked).toFixed(1) : '—'}
                           </td>
                           <td style={{ padding: '8px 10px', color: '#333', textAlign: 'right' }}>
                             {s.total_orders}
