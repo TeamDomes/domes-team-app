@@ -389,28 +389,28 @@ export default function Dashboard() {
               border: '1px solid rgba(84,60,45,0.15)',
               boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#543c2d', letterSpacing: 1.5, textTransform: 'uppercase' as const }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#543c2d', letterSpacing: 1.5, textTransform: 'uppercase' as const, fontFamily: 'Cooper Black, serif' }}>
                   This week{"'"}s top 3
                 </p>
-                <span style={{ fontSize: 10, color: '#888' }}>
+                <span style={{ fontSize: 12, color: '#888', fontWeight: 600 }}>
                   Week ending {lbWeek ? new Date(lbWeek + 'T12:00:00').toLocaleDateString() : ''}
                 </span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
                 {Object.entries(leaderboard).map(([label, rankings]) => {
                   const color = lbColors[label] || '#fff'
                   return (
                     <div key={label}>
-                      <p style={{ margin: '0 0 10px', fontSize: 11, color: '#543c2d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <i className={`ti ${lbIcons[label]}`} style={{ fontSize: 14, color }} aria-hidden="true" />
+                      <p style={{ margin: '0 0 12px', fontSize: 14, color: '#543c2d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Cooper Black, serif' }}>
+                        <i className={`ti ${lbIcons[label]}`} style={{ fontSize: 18, color }} aria-hidden="true" />
                         {label}
                       </p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {rankings.map((r, i) => (
                           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 12, color: i === 0 ? '#333' : '#666' }}>{r.name}</span>
-                            <span style={{ fontSize: 12, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? color : '#888' }}>
+                            <span style={{ fontSize: 15, fontWeight: 700, color: i === 0 ? '#333' : '#555' }}>{r.name}</span>
+                            <span style={{ fontSize: 15, fontWeight: 700, color: i === 0 ? color : '#777' }}>
                               {formatLb(label, r.value)}
                             </span>
                           </div>
