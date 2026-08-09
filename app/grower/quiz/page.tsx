@@ -54,8 +54,8 @@ export default function GrowerQuizPage() {
       .select('*')
       .eq('category', 'brand')
 
-    // Check if existing questions are for the current brand (by checking if brand name appears in questions)
-    const matchesBrand = existing && existing.length > 0 && existing[0].question?.includes(b.name)
+    // Check if ALL existing questions are for the current brand
+    const matchesBrand = existing && existing.length > 0 && existing.every((q: any) => q.question?.includes(b.name))
 
     if (!existing || existing.length === 0 || !matchesBrand) {
       // Generate new quiz questions for current brand
