@@ -44,7 +44,7 @@ export default function BingoPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
             <h1 style={{ color: '#f37029', fontSize: '28px', fontWeight: 'bold', margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>BINGO</h1>
-            {cycle && <p style={{ color: '#555', fontSize: '13px', margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>Cycle started {new Date(cycle.cycle_start_date).toLocaleDateString()}</p>}
+            {cycle && <p style={{ color: '#f4e6b4', fontSize: '13px', margin: 0, textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>Cycle started {new Date(cycle.cycle_start_date).toLocaleDateString()}</p>}
           </div>
 <div style={{ display: 'flex', gap: '8px' }}><button onClick={() => router.push('/bingo/admin')} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer', color: '#3a7b3c', fontWeight: 'bold' }}>Admin</button><button onClick={() => router.push('/dashboard')} style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 20, padding: '8px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>Dashboard</button></div>
         </div>

@@ -110,7 +110,7 @@ export default function TriviaPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>{'←'} Dashboard</a>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 12, color: '#555', textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>{triviaStats.correct}/{triviaStats.total} correct all time</span>
+            <span style={{ fontSize: 13, color: '#f4e6b4', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>{triviaStats.correct}/{triviaStats.total} correct all time</span>
             {(teamMember?.role === 'Admin' || teamMember?.role === 'Lead') && (
               <a href="/admin/trivia" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '6px 12px', borderRadius: 20, fontSize: 11, fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>Admin</a>
             )}

@@ -95,7 +95,7 @@ export default function StaffReviews() {
             <h1 style={{ fontFamily: 'Cooper Black, serif', fontSize: 26, margin: '0 0 4px', color: '#f37029', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
               Staff Reviews
             </h1>
-            <p style={{ margin: 0, fontSize: 13, color: '#555', textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>Share your product knowledge with the team</p>
+            <p style={{ margin: 0, fontSize: 13, color: '#f4e6b4', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>Share your product knowledge with the team</p>
           </div>
           <button onClick={() => router.push('/dashboard')} style={{
             background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',

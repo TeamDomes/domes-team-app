@@ -131,7 +131,7 @@ export default function LeaderboardPage() {
             <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
               {'\u{1F3C6}'} Leaderboard
             </h1>
-            <p style={{ fontSize: 13, color: '#555', margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
+            <p style={{ fontSize: 13, color: '#f4e6b4', margin: 0, textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
               {viewMode === 'week'
                 ? `Week ending ${latestWeek ? new Date(latestWeek + 'T12:00:00').toLocaleDateString() : '—'}`
                 : rollingLabel}
