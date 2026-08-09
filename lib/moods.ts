@@ -7,6 +7,7 @@ export interface Mood {
   tagline: string
   wallpaper: string
   wallpaperPosition?: string
+  wallpaperSize?: string
   bg: string
   bgGradient: string
   textColor: string

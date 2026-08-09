@@ -233,7 +233,7 @@ export default function Dashboard() {
       <div style={{
         position: 'fixed', inset: 0, zIndex: 1,
         backgroundImage: `url(${activeMood.wallpaper})`,
-        backgroundSize: currentMood === 'herb' ? '340px' : '400px',
+        backgroundSize: currentMood === 'herb' ? '340px' : (activeMood.wallpaperSize || '400px'),
         backgroundRepeat: 'repeat',
         backgroundPosition: activeMood.wallpaperPosition || '0 0',
         opacity: currentMood === 'herb' ? 0.45 : 0.40,

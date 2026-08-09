@@ -229,9 +229,16 @@ export default function BogglePage() {
       setWordFeedback({ msg: 'Not in cannabis dictionary', ok: false })
       return
     }
-    if (!canFormWord(word, board)) {
-      setWordFeedback({ msg: 'Can\'t form on board', ok: false })
-      return
+    // Check that all letters in the word exist on the board (using available tiles)
+    const boardLetters = board.map(l => l.toUpperCase())
+    const used: boolean[] = new Array(16).fill(false)
+    for (const ch of word.toUpperCase()) {
+      const idx = boardLetters.findIndex((l, i) => l === ch && !used[i])
+      if (idx === -1) {
+        setWordFeedback({ msg: 'Letters not on board', ok: false })
+        return
+      }
+      used[idx] = true
     }
 
     setFoundWords(prev => [...prev, word])
