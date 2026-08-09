@@ -34,6 +34,7 @@ export default function MoodWrapper({ children }: { children: ReactNode }) {
           backgroundImage: `url(${mood.wallpaper})`,
           backgroundSize: '400px',
           backgroundRepeat: 'repeat',
+          backgroundPosition: mood.wallpaperPosition || '0 0',
           opacity: 0.40,
           filter: mood.key !== 'herb' ? 'saturate(1.4) brightness(1.05)' : undefined,
         }} />

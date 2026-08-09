@@ -6,6 +6,7 @@ export interface Mood {
   emoji: string
   tagline: string
   wallpaper: string
+  wallpaperPosition?: string
   bg: string
   bgGradient: string
   textColor: string
@@ -73,6 +74,7 @@ export const MOODS: Record<MoodKey, Mood> = {
     emoji: '\u{1F981}',
     tagline: 'Royalty Today',
     wallpaper: '/images/mood-lion.png',
+    wallpaperPosition: '-60px -40px',
     bg: '#c8dcc6',
     bgGradient: 'linear-gradient(135deg, #c8dcc6 0%, #bcd0ba 50%, #d0e4ce 100%)',
     textColor: '#2a3c1a',

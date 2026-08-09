@@ -18,6 +18,7 @@ const navItems = [
   { label: 'Grower',        href: '/grower',          icon: 'ti-plant',           desc: 'Brand spotlight',   bg: '#543c2d', text: '#f4e6b4' },
   { label: 'Wall of Love',  href: '/wall-of-love',    icon: 'ti-star',            desc: 'Google reviews',    bg: '#ffcb1f', text: '#543c2d' },
   { label: 'Reviews',       href: '/reviews',          icon: 'ti-message-star',    desc: 'Product reviews',   bg: '#2d6b9e', text: '#fff' },
+  { label: 'Boggle',        href: '/boggle',           icon: 'ti-grid-dots',       desc: 'Word hunt',         bg: '#8B5E3C', text: '#f4e6b4' },
 ]
 
 /* ── scattered dome triangles (SVG) ── */
@@ -234,6 +235,7 @@ export default function Dashboard() {
         backgroundImage: `url(${activeMood.wallpaper})`,
         backgroundSize: currentMood === 'herb' ? '340px' : '400px',
         backgroundRepeat: 'repeat',
+        backgroundPosition: activeMood.wallpaperPosition || '0 0',
         opacity: currentMood === 'herb' ? 0.45 : 0.40,
         filter: currentMood === 'herb' ? 'saturate(1.2) brightness(1.1)' : 'saturate(1.4) brightness(1.05)',
       }} />
@@ -313,11 +315,6 @@ export default function Dashboard() {
                       }}
                     >
                       <span style={{ fontSize: 24, display: 'block', marginBottom: 4 }}>{mood.emoji}</span>
-                      <span style={{
-                        fontSize: 11, fontFamily: 'Cooper Black, serif',
-                        color: isActive ? '#fff' : mood.textColor,
-                        display: 'block',
-                      }}>{mood.label}</span>
                       <span style={{
                         fontSize: 11, fontFamily: 'TAY Bone Quixote, Cooper Black, serif',
                         color: isActive ? 'rgba(255,255,255,0.85)' : mood.mutedColor,
