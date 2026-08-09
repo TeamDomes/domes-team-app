@@ -167,7 +167,7 @@ export default function MyStatsPage() {
 
     return (
       <>
-        <p style={{ fontSize: 13, color: '#f4e6b4', margin: '0 0 16px', textTransform: 'uppercase' as const, letterSpacing: 1, textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
+        <p style={{ fontSize: 13, color: '#fff', margin: '0 0 16px', textTransform: 'uppercase' as const, letterSpacing: 1, background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>
           Leadership Metrics · Last {leadStats.totalWeeks} weeks
         </p>
 
@@ -290,7 +290,7 @@ export default function MyStatsPage() {
               {isAdmin && viewingUser?.id !== currentUser?.id ? `${viewingUser?.full_name}'s Stats` : 'My Stats'}
             </h1>
             {viewingUser && (
-              <p style={{ fontSize: 13, color: '#f4e6b4', margin: 0, textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
+              <p style={{ fontSize: 13, color: '#fff', margin: 0, background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>
                 {viewingUser.full_name} {'·'} {viewingUser.role === 'Lead' ? 'Team Lead' : viewingUser.type}
               </p>
             )}
@@ -329,7 +329,7 @@ export default function MyStatsPage() {
           <>
             {/* Current Week Stats */}
             <div style={{ marginBottom: 8 }}>
-              <p style={{ fontSize: 13, color: '#f4e6b4', margin: '0 0 12px', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
+              <p style={{ fontSize: 13, color: '#fff', margin: '0 0 12px', background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>
                 Week ending {new Date(latest.week_ending + 'T12:00:00').toLocaleDateString()}
               </p>
             </div>

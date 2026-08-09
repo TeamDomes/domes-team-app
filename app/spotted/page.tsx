@@ -103,7 +103,7 @@ export default function SpottedPage() {
           </a>
         </div>
 
-        <p style={{ color: '#f4e6b4', marginBottom: 16, fontSize: 15, textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
+        <p style={{ color: '#fff', marginBottom: 16, fontSize: 13, background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>
           Seen any of our products, brands, or anything else inspiring out in the world? Pin it here!
         </p>
 
