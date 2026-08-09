@@ -35,6 +35,7 @@ export default function MoodWrapper({ children }: { children: ReactNode }) {
           backgroundSize: '400px',
           backgroundRepeat: 'repeat',
           opacity: 0.40,
+          filter: mood.key !== 'herb' ? 'saturate(1.4) brightness(1.05)' : undefined,
         }} />
       )}
       <div style={{ position: 'relative', zIndex: 1 }}>

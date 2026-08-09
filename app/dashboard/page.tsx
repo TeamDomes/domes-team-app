@@ -235,7 +235,7 @@ export default function Dashboard() {
         backgroundSize: currentMood === 'herb' ? '340px' : '400px',
         backgroundRepeat: 'repeat',
         opacity: currentMood === 'herb' ? 0.45 : 0.40,
-        filter: currentMood === 'herb' ? 'saturate(1.2) brightness(1.1)' : undefined,
+        filter: currentMood === 'herb' ? 'saturate(1.2) brightness(1.1)' : 'saturate(1.4) brightness(1.05)',
       }} />
 
       {/* ── Dome triangles overlay (herb only) ── */}
