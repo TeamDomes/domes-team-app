@@ -128,7 +128,7 @@ export default function LeaderboardPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#333', fontSize: 28, margin: '0 0 4px', textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
+            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
               {'\u{1F3C6}'} Leaderboard
             </h1>
             <p style={{ fontSize: 13, color: '#555', margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>

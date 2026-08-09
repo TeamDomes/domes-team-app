@@ -51,7 +51,7 @@ export default function AppreciationsPage() {
     <MoodWrapper><div style={{ fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h1 style={{ color: '#333', fontSize: '24px', fontWeight: 'bold', margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>Appreciations</h1>
+          <h1 style={{ color: '#f37029', fontSize: '24px', fontWeight: 'bold', margin: 0, textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>Appreciations</h1>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#3a7b3c', color: 'white', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}>{showForm ? 'Cancel' : '+ Send'}</button>
             <button onClick={() => router.push('/dashboard')} style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>Dashboard</button>

@@ -223,7 +223,7 @@ export default function WordlePage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>{'←'} Dashboard</a>
           <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#333', fontSize: 28, margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
+            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: 0, textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
               {'🌿'} Domes Wordle
             </h1>
             <p style={{ fontSize: 12, color: '#555', margin: '2px 0 0', textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>{wordLen} letters today</p>

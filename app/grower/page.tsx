@@ -135,7 +135,7 @@ export default function GrowerPage() {
         </a>
 
         <div style={{ textAlign: 'center', marginTop: 10, marginBottom: 20 }}>
-          <h1 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 28, color: '#333', margin: 0, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
+          <h1 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 28, color: '#f37029', margin: 0, textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
             {'🌱'} Grower of the Week
           </h1>
           <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#555', marginTop: 5, textShadow: '0 1px 4px rgba(255,255,255,0.7)' }}>
