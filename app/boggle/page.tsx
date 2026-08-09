@@ -86,6 +86,9 @@ export default function BogglePage() {
   const [foundWords, setFoundWords] = useState<string[]>([])
   const [wordFeedback, setWordFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
 
+  // Study guide
+  const [showGuide, setShowGuide] = useState(false)
+
   // Results
   const [results, setResults] = useState<any>(null)
 
@@ -369,7 +372,44 @@ export default function BogglePage() {
               borderRadius: 20, display: 'inline-block', fontSize: 13,
               fontFamily: 'Cooper Light, serif', marginTop: 6,
             }}>Find cannabis words in the grid!</span>
+            <button onClick={() => setShowGuide(!showGuide)} style={{
+              display: 'block', margin: '10px auto 0', background: 'rgba(255,255,255,0.85)',
+              border: '1px solid rgba(0,0,0,0.12)', borderRadius: 20, padding: '6px 16px',
+              fontFamily: 'Cooper Light, serif', fontSize: 13, color: '#543c2d',
+              cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+            }}>{showGuide ? 'Hide' : 'Show'} Word List</button>
           </div>
+
+          {/* Study Guide */}
+          {showGuide && (
+            <div style={{
+              background: 'rgba(255,255,255,0.92)', borderRadius: 14, padding: 20,
+              marginBottom: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+              maxHeight: 400, overflowY: 'auto',
+            }}>
+              <h3 style={{ fontFamily: 'Cooper Black, serif', fontSize: 16, color: '#f37029', margin: '0 0 12px' }}>
+                Cannabis Word List ({CANNABIS_DICTIONARY.size} words)
+              </h3>
+              {[
+                { title: 'Strains', words: 'ace,acdc,afghan,afpak,amnesia,animal,ape,apple,banana,biscotti,biscuit,blackberry,blueberry,bruce,bubba,bubblegum,cake,candy,cereal,cheese,cheetah,chemdog,cherry,chocolate,citrus,cookie,cookies,cream,critical,crush,diesel,dosido,dream,durban,fire,fruity,fuel,gas,gelato,ghost,glue,gorilla,grape,grapefruit,gsc,guava,gummy,haze,headband,hulk,ice,jack,jealousy,jet,king,kryptonite,kush,larry,lavender,lemon,lime,london,mac,mango,maui,melon,mimosa,mint,mochi,moonrock,northern,nuken,obama,ocean,orange,oreo,papaya,peach,pebbles,pie,pine,pineapple,plum,poison,punch,purple,rainbow,razz,rocket,runtz,sherbert,skittlez,skunk,slurricane,snowcap,sour,stardawg,strawberry,sugar,sunset,supreme,tangie,tiger,trainwreck,truffle,tuna,vanilla,velvet,venom,watermelon,wedding,white,widow,wizard,yoda,zen,zero,zkittlez,zombie,zookies' },
+                { title: 'Terpenes', words: 'bisabolol,borneol,camphene,carene,caryophyllene,cymene,eucalyptol,farnesene,fenchol,geraniol,guaiol,humulene,limonene,linalool,myrcene,nerolidol,ocimene,phytol,pinene,pulegone,sabinene,terpinene,terpineol,terpinolene,valencene' },
+                { title: 'Effects', words: 'alert,awake,bliss,body,boost,brave,bright,buzz,calm,chill,clear,couch,create,creative,deep,dopey,doze,dream,drift,ease,elate,energy,euphoria,float,flow,focus,free,fresh,giddy,giggly,glow,good,groove,happy,harmony,haze,head,heal,heavy,high,ignite,inspire,joy,juice,keen,lazy,lean,level,lift,light,lit,lock,loose,love,lucid,mellow,mental,mind,mood,nap,numb,peace,peak,pep,power,quiet,relax,relief,rest,rise,rush,sedated,serene,sleepy,slow,smooth,snooze,social,soothe,spark,spirit,stoned,surge,sweet,tingle,tired,tone,tranquil,trip,tune,unwind,uplift,upbeat,vibe,vigor,vivid,warm,wave,wavy,woke,wonder,wow,zen,zing,zone' },
+                { title: 'Gear', words: 'ash,ashtray,banger,battery,blunt,bong,bowl,bubbler,burner,butane,cap,carb,cart,chillum,clipper,coil,cone,dab,dabber,dome,domes,downstem,drip,dugout,edible,filter,flame,flint,glass,globe,grinder,hemp,holder,hookah,jar,joint,kief,lighter,liner,mat,mill,mod,mold,nail,nectar,oil,paper,papers,pen,perc,piece,pipe,poker,pouch,press,puck,puff,quartz,rag,reclaim,rig,ring,roach,roll,roller,scale,screen,shatter,slab,slider,snuffer,spool,stem,stir,straw,tab,tin,tip,toke,tool,torch,tray,trim,tube,vape,vial,wick,wrap' },
+                { title: 'Plant & Grow', words: 'bract,branch,breed,bud,bulb,calyx,canopy,clone,cola,compost,crop,cure,cut,dirt,drain,dry,fan,feed,fem,fiber,flora,flower,flush,foliage,frost,germ,grow,guard,harvest,herd,hybrid,indica,leaf,lobe,lumen,male,mother,mulch,node,nug,nugs,nutrient,organic,peat,pest,pheno,pistil,plant,pollen,pot,prune,pull,resin,root,ruderalis,sap,sativa,seed,shake,soil,sprout,stalk,stem,sticky,strain,sugar,tent,terra,top,tree,trellis,trichome,trim,veg,vine,water,wax,weed,wet,wick,yield' },
+                { title: 'Industry', words: 'bag,bank,batch,bid,bin,brand,bulk,buy,cash,club,coa,comply,cost,counter,cure,deal,delivery,dispo,dose,drop,eighth,extract,farm,fill,firm,gram,green,grind,grow,half,hash,hub,label,lab,legal,license,lid,lot,loud,market,med,menu,micro,ounce,pack,patron,permit,pharm,plug,potency,preroll,price,product,profit,promo,quad,quality,rec,retail,review,safe,sale,sell,shelf,shop,smoke,stock,store,supply,tax,terp,test,tier,tincture,topical,total,unit,upsell,vendor,vet,wholesale,zip' },
+                { title: 'Slang', words: 'bake,baked,banger,blast,blaze,blazed,chief,chronic,cloud,cough,crispy,dank,dazed,diesel,dope,faded,fire,fried,ganja,gas,gone,goofy,green,herb,hit,hot,inhale,jane,juice,kief,kind,leaf,legit,lit,loud,mary,mids,mist,nug,nugs,phat,puff,purp,reefer,rip,roast,sesh,slab,smoke,smoked,snoop,spliff,stash,stick,stoned,stoner,stink,toke,toker,torch,trees,trip,vape,weed,whip,zooted' },
+              ].map(cat => (
+                <div key={cat.title} style={{ marginBottom: 12 }}>
+                  <p style={{ fontFamily: 'Cooper Black, serif', fontSize: 13, color: '#543c2d', margin: '0 0 4px' }}>
+                    {cat.title}
+                  </p>
+                  <p style={{ fontFamily: 'Cooper Light, serif', fontSize: 12, color: '#666', margin: 0, lineHeight: 1.6 }}>
+                    {cat.words.split(',').join(', ')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* ── LOBBY VIEW ── */}
           {view === 'lobby' && !gameId && (
