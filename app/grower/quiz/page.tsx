@@ -48,14 +48,17 @@ export default function GrowerQuizPage() {
     const b = featured[0]
     setBrand(b)
 
-    // Check if quiz questions exist for brand category
+    // Check if quiz questions exist for THIS brand
     const { data: existing } = await supabase
       .from('trivia_questions')
       .select('*')
       .eq('category', 'brand')
 
-    if (!existing || existing.length === 0) {
-      // Generate quiz questions
+    // Check if existing questions are for the current brand (by checking if brand name appears in questions)
+    const matchesBrand = existing && existing.length > 0 && existing[0].question?.includes(b.name)
+
+    if (!existing || existing.length === 0 || !matchesBrand) {
+      // Generate new quiz questions for current brand
       setGenerating(true)
       await generateQuiz(b)
       setGenerating(false)
