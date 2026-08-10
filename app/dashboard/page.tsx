@@ -8,22 +8,22 @@ import { MOODS, MOOD_KEYS, DEFAULT_MOOD, type MoodKey } from '@/lib/moods'
 /* ── nav sections with headers ── */
 const navSections = [
   { title: 'Performance', items: [
-    { label: 'My Stats',      href: '/stats',          icon: 'ti-chart-bar',        desc: 'Performance',       bg: '#387dac', text: '#fff' },
+    { label: 'My Stats',      href: '/stats',          icon: 'ti-chart-bar',        desc: 'How Am I Doing?',   bg: '#387dac', text: '#fff' },
     { label: 'BINGO',         href: '/bingo',          icon: 'ti-target',           desc: 'Weekly card',       bg: '#7b5ea7', text: '#fff' },
-    { label: 'Recap',         href: '/recap',           icon: 'ti-confetti',        desc: 'Weekly wins',       bg: '#3a7b3c', text: '#fff' },
+    { label: 'Recap',         href: '/recap',           icon: 'ti-confetti',        desc: 'Weekly Wrap-Up',    bg: '#3a7b3c', text: '#fff' },
   ]},
   { title: 'Team', items: [
-    { label: 'Appreciations', href: '/appreciations',  icon: 'ti-heart-handshake',  desc: 'Recognize peers',   bg: '#f37029', text: '#fff' },
+    { label: 'Appreciations', href: '/appreciations',  icon: 'ti-heart-handshake',  desc: 'Spread The Love',   bg: '#f37029', text: '#fff' },
     { label: 'Wall of Love',  href: '/wall-of-love',    icon: 'ti-star',            desc: 'Google reviews',    bg: '#ffcb1f', text: '#543c2d' },
     { label: 'Pets',          href: '/pets',            icon: 'ti-paw',             desc: 'Team pets',         bg: '#d4436a', text: '#fff' },
   ]},
   { title: 'Culture', items: [
     { label: 'Partners',      href: '/grower',          icon: 'ti-plant',           desc: 'Brand spotlight',   bg: '#543c2d', text: '#f4e6b4' },
-    { label: 'Reviews',       href: '/reviews',          icon: 'ti-message-star',    desc: 'Product reviews',   bg: '#2d6b9e', text: '#fff' },
+    { label: 'Product Reviews', href: '/reviews',        icon: 'ti-message-star',    desc: 'Share your thoughts', bg: '#2d6b9e', text: '#fff' },
     { label: 'Spotted',       href: '/spotted',         icon: 'ti-eye',             desc: 'Cool finds',        bg: '#e84593', text: '#fff' },
   ]},
   { title: 'Games', items: [
-    { label: 'Trivia',        href: '/trivia',        icon: 'ti-brain',            desc: 'Daily quiz',        bg: '#c8a84e', text: '#1a2f2a' },
+    { label: 'Trivia',        href: '/trivia',        icon: 'ti-brain',            desc: 'Test Your Knowledge', bg: '#c8a84e', text: '#1a2f2a' },
     { label: 'Wordle',        href: '/wordle',         icon: 'ti-vocabulary',       desc: 'Word puzzle',       bg: '#2d9e75', text: '#fff' },
     { label: 'Cannaboggle',   href: '/boggle',           icon: 'ti-grid-dots',       desc: 'Word hunt',         bg: '#8B5E3C', text: '#f4e6b4' },
   ]},
@@ -217,6 +217,8 @@ export default function Dashboard() {
       <style>{`
         .tile-hover { transition: transform 0.2s, box-shadow 0.2s; }
         .tile-hover:hover { transform: scale(1.04) !important; box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important; }
+        .tile-hover .tile-desc { opacity: 0; transition: opacity 0.2s; }
+        .tile-hover:hover .tile-desc { opacity: 0.7 !important; }
         @keyframes shimmer {
           0% { background-position: -200% center; }
           100% { background-position: 200% center; }
@@ -483,13 +485,13 @@ export default function Dashboard() {
                       opacity: 0.85,
                     }} aria-hidden="true" />
                     <p style={{
-                      margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: 15,
+                      margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: 18,
                       color: item.text,
                     }}>{item.label}</p>
-                    <p style={{
-                      margin: '3px 0 0', fontSize: 10,
+                    <p className="tile-desc" style={{
+                      margin: '4px 0 0', fontSize: 12,
                       color: item.text,
-                      opacity: 0.6,
+                      fontWeight: 'bold',
                       fontFamily: 'Cooper Light, system-ui, sans-serif',
                     }}>{item.desc}</p>
                   </button>
