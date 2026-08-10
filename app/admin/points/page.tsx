@@ -119,6 +119,25 @@ export default function PointsReportPage() {
     bingo_google_review: 'Google Review',
     bingo_square: 'BINGO Square',
     bingo_win: 'BINGO Win',
+    google_review_mention: 'Google Review Mention',
+    lead_trickle: 'Lead Bonus',
+    points_adjustment: 'Adjustment',
+    boggle_win: 'Boggle Win',
+    boggle_play: 'Boggle Played',
+    wordle_win: 'Wordle',
+  }
+
+  function exportCSV() {
+    const header = 'Name,Role,This Week,All Time,Tier'
+    const rows = weekData.map(r => `${r.name},${r.role},${r.weekPoints},${r.allTimePoints},${r.tier}`)
+    const csv = [header, ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `domes-points-${weekLabel.replace(/[^a-zA-Z0-9]/g, '-')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -131,9 +150,18 @@ export default function PointsReportPage() {
         <h1 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 24, color: '#543c2d', marginTop: 10 }}>
           {'🏆'} Weekly Points Report
         </h1>
-        <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#666', marginBottom: 20 }}>
-          Week of {weekLabel}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#666', margin: 0 }}>
+            Week of {weekLabel}
+          </p>
+          <button onClick={exportCSV} style={{
+            background: '#3a7b3c', color: '#fff', border: 'none', borderRadius: 8,
+            padding: '8px 16px', fontFamily: 'Cooper Black, serif', fontSize: 13,
+            cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+          }}>
+            Export CSV for AIQ
+          </button>
+        </div>
 
         {/* Weekly Report Table */}
         <div style={{

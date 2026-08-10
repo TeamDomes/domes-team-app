@@ -62,8 +62,8 @@ export default function WallOfLovePage() {
 
   /* Admin: manually add a review */
   async function addReview() {
-    if (!newReview.customer_name || !newReview.review_text) {
-      alert('Please fill in the customer name and review text.')
+    if (!newReview.customer_name) {
+      alert('Please fill in the customer name.')
       return
     }
     setSaving(true)
@@ -90,7 +90,7 @@ export default function WallOfLovePage() {
       for (const name of mentioned) {
         const match = team.find((t: any) => t.full_name.split(' ')[0].toLowerCase() === name.toLowerCase())
         if (match) {
-          await awardPoints(match.id, 15, 'google_review_mention', newReview.customer_name)
+          await awardPoints(match.id, 250, 'google_review_mention', newReview.customer_name)
         }
       }
     }
@@ -239,12 +239,21 @@ export default function WallOfLovePage() {
                   </span>
                   <span style={{ fontSize: 14 }}>{stars(r.rating)}</span>
                 </div>
-                <p style={{
-                  margin: '0 0 10px', fontSize: 14, color: '#444', lineHeight: 1.6,
-                  fontStyle: 'italic', fontFamily: 'Cooper Light, serif',
-                }}>
-                  &ldquo;{r.review_text}&rdquo;
-                </p>
+                {r.review_text ? (
+                  <p style={{
+                    margin: '0 0 10px', fontSize: 14, color: '#444', lineHeight: 1.6,
+                    fontStyle: 'italic', fontFamily: 'Cooper Light, serif',
+                  }}>
+                    &ldquo;{r.review_text}&rdquo;
+                  </p>
+                ) : (
+                  <p style={{
+                    margin: '0 0 10px', fontSize: 13, color: '#aaa',
+                    fontFamily: 'Cooper Light, serif',
+                  }}>
+                    No comment — just {stars(r.rating)}
+                  </p>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {(r.mentioned_names || []).map((name: string) => (

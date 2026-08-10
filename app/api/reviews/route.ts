@@ -60,10 +60,9 @@ export async function POST(req: Request) {
         if (match) {
           await supabase.from('points_log').insert({
             team_member_id: match.id,
-            points: 15,
-            action: 'google_review_mention',
-            details: customerName,
-            created_at: new Date().toISOString(),
+            points: 250,
+            activity: 'google_review_mention',
+            source_id: customerName,
           })
         }
       }
