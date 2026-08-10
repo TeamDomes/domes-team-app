@@ -203,7 +203,7 @@ export default function WallOfLovePage() {
                 />
                 {newReview.review_text && detectStaff(newReview.review_text).length > 0 && (
                   <p style={{ fontFamily: 'Cooper Light, serif', fontSize: 12, color: '#3a7b3c', margin: '6px 0 0' }}>
-                    Staff detected: {detectStaff(newReview.review_text).join(', ')} — they&apos;ll earn 15 points!
+                    Staff detected: {detectStaff(newReview.review_text).join(', ')} — they&apos;ll earn 250 points!
                   </p>
                 )}
               </div>

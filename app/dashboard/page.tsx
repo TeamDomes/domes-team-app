@@ -5,20 +5,28 @@ import { useRouter } from 'next/navigation'
 import { awardPoints, POINTS } from '@/lib/points'
 import { MOODS, MOOD_KEYS, DEFAULT_MOOD, type MoodKey } from '@/lib/moods'
 
-/* ── icon map (Tabler icon class names) ── */
-const navItems = [
-  { label: 'Trivia',        href: '/trivia',        icon: 'ti-brain',            desc: 'Daily quiz',        bg: '#c8a84e', text: '#1a2f2a' },
-  { label: 'Wordle',        href: '/wordle',         icon: 'ti-vocabulary',       desc: 'Word puzzle',       bg: '#2d9e75', text: '#fff' },
-  { label: 'My Stats',      href: '/stats',          icon: 'ti-chart-bar',        desc: 'Performance',       bg: '#387dac', text: '#fff' },
-  { label: 'BINGO',         href: '/bingo',          icon: 'ti-target',           desc: 'Weekly card',       bg: '#7b5ea7', text: '#fff' },
-  { label: 'Appreciations', href: '/appreciations',  icon: 'ti-heart-handshake',  desc: 'Recognize peers',   bg: '#f37029', text: '#fff' },
-  { label: 'Pets',          href: '/pets',            icon: 'ti-paw',             desc: 'Team pets',         bg: '#d4436a', text: '#fff' },
-  { label: 'Spotted',       href: '/spotted',         icon: 'ti-eye',             desc: 'Cool finds',        bg: '#e84593', text: '#fff' },
-  { label: 'Recap',         href: '/recap',           icon: 'ti-confetti',        desc: 'Weekly wins',       bg: '#3a7b3c', text: '#fff' },
-  { label: 'Grower',        href: '/grower',          icon: 'ti-plant',           desc: 'Brand spotlight',   bg: '#543c2d', text: '#f4e6b4' },
-  { label: 'Wall of Love',  href: '/wall-of-love',    icon: 'ti-star',            desc: 'Google reviews',    bg: '#ffcb1f', text: '#543c2d' },
-  { label: 'Reviews',       href: '/reviews',          icon: 'ti-message-star',    desc: 'Product reviews',   bg: '#2d6b9e', text: '#fff' },
-  { label: 'Boggle',        href: '/boggle',           icon: 'ti-grid-dots',       desc: 'Word hunt',         bg: '#8B5E3C', text: '#f4e6b4' },
+/* ── nav sections with headers ── */
+const navSections = [
+  { title: 'Performance & Goals', items: [
+    { label: 'My Stats',      href: '/stats',          icon: 'ti-chart-bar',        desc: 'Performance',       bg: '#387dac', text: '#fff' },
+    { label: 'BINGO',         href: '/bingo',          icon: 'ti-target',           desc: 'Weekly card',       bg: '#7b5ea7', text: '#fff' },
+    { label: 'Wall of Love',  href: '/wall-of-love',    icon: 'ti-star',            desc: 'Google reviews',    bg: '#ffcb1f', text: '#543c2d' },
+  ]},
+  { title: 'Team & Culture', items: [
+    { label: 'Appreciations', href: '/appreciations',  icon: 'ti-heart-handshake',  desc: 'Recognize peers',   bg: '#f37029', text: '#fff' },
+    { label: 'Grower',        href: '/grower',          icon: 'ti-plant',           desc: 'Brand spotlight',   bg: '#543c2d', text: '#f4e6b4' },
+    { label: 'Reviews',       href: '/reviews',          icon: 'ti-message-star',    desc: 'Product reviews',   bg: '#2d6b9e', text: '#fff' },
+  ]},
+  { title: 'Social', items: [
+    { label: 'Recap',         href: '/recap',           icon: 'ti-confetti',        desc: 'Weekly wins',       bg: '#3a7b3c', text: '#fff' },
+    { label: 'Pets',          href: '/pets',            icon: 'ti-paw',             desc: 'Team pets',         bg: '#d4436a', text: '#fff' },
+    { label: 'Spotted',       href: '/spotted',         icon: 'ti-eye',             desc: 'Cool finds',        bg: '#e84593', text: '#fff' },
+  ]},
+  { title: 'Games', items: [
+    { label: 'Trivia',        href: '/trivia',        icon: 'ti-brain',            desc: 'Daily quiz',        bg: '#c8a84e', text: '#1a2f2a' },
+    { label: 'Wordle',        href: '/wordle',         icon: 'ti-vocabulary',       desc: 'Word puzzle',       bg: '#2d9e75', text: '#fff' },
+    { label: 'Boggle',        href: '/boggle',           icon: 'ti-grid-dots',       desc: 'Word hunt',         bg: '#8B5E3C', text: '#f4e6b4' },
+  ]},
 ]
 
 /* ── scattered dome triangles (SVG) ── */
@@ -441,40 +449,49 @@ export default function Dashboard() {
             </button>
           )}
 
-          {/* Nav Tiles */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-            {navItems.map((item) => (
-                <button
-                  key={item.href}
-                  className="tile-hover"
-                  onClick={() => router.push(item.href)}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    background: item.bg,
-                    border: 'none',
-                    borderRadius: 14, padding: '22px 16px', cursor: 'pointer',
-                    textAlign: 'center', width: '100%', minHeight: 120,
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                  }}
-                >
-                  <i className={`ti ${item.icon}`} style={{
-                    fontSize: 28, marginBottom: 8, display: 'block',
-                    color: item.text,
-                    opacity: 0.85,
-                  }} aria-hidden="true" />
-                  <p style={{
-                    margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: 15,
-                    color: item.text,
-                  }}>{item.label}</p>
-                  <p style={{
-                    margin: '3px 0 0', fontSize: 10,
-                    color: item.text,
-                    opacity: 0.6,
-                    fontFamily: 'Cooper Light, system-ui, sans-serif',
-                  }}>{item.desc}</p>
-                </button>
-            ))}
-          </div>
+          {/* Nav Tiles by Section */}
+          {navSections.map((section) => (
+            <div key={section.title} style={{ marginBottom: 8 }}>
+              <p style={{
+                fontFamily: 'Cooper Black, serif', fontSize: 13, color: '#fff',
+                margin: '0 0 6px 4px', textShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                letterSpacing: 0.5,
+              }}>{section.title}</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                {section.items.map((item) => (
+                  <button
+                    key={item.href}
+                    className="tile-hover"
+                    onClick={() => router.push(item.href)}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      background: item.bg,
+                      border: 'none',
+                      borderRadius: 14, padding: '22px 16px', cursor: 'pointer',
+                      textAlign: 'center', width: '100%', minHeight: 120,
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    }}
+                  >
+                    <i className={`ti ${item.icon}`} style={{
+                      fontSize: 28, marginBottom: 8, display: 'block',
+                      color: item.text,
+                      opacity: 0.85,
+                    }} aria-hidden="true" />
+                    <p style={{
+                      margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: 15,
+                      color: item.text,
+                    }}>{item.label}</p>
+                    <p style={{
+                      margin: '3px 0 0', fontSize: 10,
+                      color: item.text,
+                      opacity: 0.6,
+                      fontFamily: 'Cooper Light, system-ui, sans-serif',
+                    }}>{item.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
 
         </div>
       </div>
