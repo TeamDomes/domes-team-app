@@ -14,7 +14,7 @@ export const POINTS = {
   // BINGO squares - different values per type
   BINGO_ON_TIME: 10,
   BINGO_DRAWER: 25,
-  BINGO_GOOGLE_REVIEW: 100,
+  BINGO_GOOGLE_REVIEW: 0,  // O square marked but no separate points — 250 comes from Wall of Love
   BINGO_SQUARE: 15,       // all other squares
   BINGO_WIN: 1500,         // winning BINGO
 }
