@@ -453,9 +453,14 @@ export default function Dashboard() {
           {navSections.map((section) => (
             <div key={section.title} style={{ marginBottom: 8 }}>
               <p style={{
-                fontFamily: 'Cooper Black, serif', fontSize: 13, color: '#fff',
-                margin: '0 0 6px 4px', textShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                letterSpacing: 0.5,
+                fontFamily: 'Cooper Black, serif', fontSize: 12, color: '#f4e6b4',
+                margin: '0 0 8px 0',
+                background: 'rgba(84, 60, 45, 0.75)',
+                display: 'inline-block',
+                padding: '4px 14px',
+                borderRadius: 20,
+                letterSpacing: 0.8,
+                textTransform: 'uppercase',
               }}>{section.title}</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                 {section.items.map((item) => (
