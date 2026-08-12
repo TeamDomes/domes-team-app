@@ -280,6 +280,8 @@ export default function StatsImportPage() {
       }
 
       // ── 3. Parse Attendance (optional) ──
+      // Count unique DAYS per person as shifts (not rows).
+      // Only the first clock-in of each day determines lateness.
       const onTimeData: Record<string, boolean> = {}
       const shiftCounts: Record<string, { total: number; onTime: number }> = {}
       if (attendanceFile) {
@@ -289,20 +291,59 @@ export default function StatsImportPage() {
         const attHeader = attRows[attHeaderIdx]
         const nameIdx = attHeader.indexOf('Name')
         const typeIdx = attHeader.indexOf('Type')
-        const lateMembers = new Set<string>()
+        const dateIdx = attHeader.indexOf('Date')
+        const shiftIdx = attHeader.indexOf('Shift Time')
+
+        // Group by member+date, track earliest shift start per day
+        const dayMap: Record<string, Record<string, { lateClockIn: boolean; noShow: boolean; earliestShift: string }>> = {}
+
         for (let i = attHeaderIdx + 1; i < attRows.length; i++) {
           const row = attRows[i]
           const name = row[nameIdx]
-          const type = row[typeIdx]
+          const type = (row[typeIdx] || '').trim()
+          const date = (row[dateIdx >= 0 ? dateIdx : 0] || '').trim()
+          const shiftTime = (row[shiftIdx >= 0 ? shiftIdx : 0] || '').trim()
           const member = findMember(name, team)
-          if (!member) continue
-          if (!(member.id in onTimeData)) onTimeData[member.id] = true
-          if (!shiftCounts[member.id]) shiftCounts[member.id] = { total: 0, onTime: 0 }
-          shiftCounts[member.id].total++
-          if (type === 'late on clock-in' || type === 'no show on shift') {
-            lateMembers.add(member.id)
-          } else {
-            shiftCounts[member.id].onTime++
+          if (!member || !date) continue
+
+          const key = member.id
+          if (!dayMap[key]) dayMap[key] = {}
+          if (!dayMap[key][date]) dayMap[key][date] = { lateClockIn: false, noShow: false, earliestShift: '' }
+
+          const day = dayMap[key][date]
+
+          // Track earliest shift start to identify the first clock-in of the day
+          const shiftStart = shiftTime.split(' - ')[0] || ''
+          if (!day.earliestShift || (shiftStart && shiftStart < day.earliestShift)) {
+            // This is an earlier shift — only this one's clock-in status matters
+            if (type === 'late on clock-in') {
+              day.lateClockIn = true
+            } else if (type === 'early on clock-in' || type === 'no shift on clock-in') {
+              // Earlier shift was on time — reset any late from a later-listed shift
+              day.lateClockIn = false
+            }
+            if (shiftStart) day.earliestShift = shiftStart
+          } else if (shiftStart === day.earliestShift) {
+            // Same shift — update clock-in status
+            if (type === 'late on clock-in') day.lateClockIn = true
+          }
+          // Clock-out events and later shifts are ignored for lateness
+
+          if (type === 'no show on shift') day.noShow = true
+        }
+
+        // Now count unique days and determine lateness
+        const lateMembers = new Set<string>()
+        for (const [memberId, dates] of Object.entries(dayMap)) {
+          if (!(memberId in onTimeData)) onTimeData[memberId] = true
+          if (!shiftCounts[memberId]) shiftCounts[memberId] = { total: 0, onTime: 0 }
+          for (const day of Object.values(dates)) {
+            shiftCounts[memberId].total++
+            if (day.lateClockIn || day.noShow) {
+              lateMembers.add(memberId)
+            } else {
+              shiftCounts[memberId].onTime++
+            }
           }
         }
         for (const id of lateMembers) {
