@@ -12,8 +12,40 @@ export default function CatalogImportPage() {
   const [result, setResult] = useState<any>(null)
   const [brands, setBrands] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState<any>(null)
+  const [dutchieStatus, setDutchieStatus] = useState<string>('')
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { loadData(); checkDutchie() }, [])
+
+  async function checkDutchie() {
+    try {
+      const res = await fetch('/api/dutchie/sync')
+      const data = await res.json()
+      setDutchieStatus(data.status === 'connected' ? 'connected' : 'not connected')
+    } catch {
+      setDutchieStatus('not connected')
+    }
+  }
+
+  async function handleDutchieSync() {
+    setSyncing(true)
+    setSyncResult(null)
+    try {
+      const res = await fetch('/api/dutchie/sync', { method: 'POST' })
+      const data = await res.json()
+      setSyncResult(data)
+      // Reload brands list
+      const { data: brandsData } = await supabase
+        .from('brands')
+        .select('id, name, is_active, description')
+        .order('name')
+      setBrands(brandsData || [])
+    } catch (err: any) {
+      setSyncResult({ status: 'error', message: err.message })
+    }
+    setSyncing(false)
+  }
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -206,7 +238,91 @@ export default function CatalogImportPage() {
           Brands marked RETIRED will be deactivated.
         </p>
 
-        {/* Upload Section */}
+        {/* Dutchie Sync Section */}
+        <div style={{
+          background: '#fff', borderRadius: 12, padding: 20, marginBottom: 20,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '2px solid #3a7b3c',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h3 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 16, color: '#3a7b3c', margin: 0 }}>
+              Dutchie POS Sync
+            </h3>
+            <span style={{
+              fontSize: 11, fontFamily: 'Cooper Light, Georgia, serif',
+              padding: '3px 10px', borderRadius: 20,
+              background: dutchieStatus === 'connected' ? '#e8f5e9' : '#fff3cd',
+              color: dutchieStatus === 'connected' ? '#3a7b3c' : '#856404',
+            }}>
+              {dutchieStatus === 'connected' ? 'Connected' : dutchieStatus === 'not connected' ? 'Not Connected' : 'Checking...'}
+            </span>
+          </div>
+          <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 13, color: '#666', margin: '0 0 15px' }}>
+            Pull the latest product catalog and inventory levels directly from Dutchie. Runs automatically every morning at 7am.
+          </p>
+          <button
+            onClick={handleDutchieSync}
+            disabled={syncing || dutchieStatus !== 'connected'}
+            style={{
+              background: syncing || dutchieStatus !== 'connected' ? '#ccc' : '#3a7b3c',
+              color: '#fff', border: 'none', borderRadius: 8,
+              padding: '12px 24px', fontFamily: 'Cooper Black, Georgia, serif',
+              fontSize: 15, cursor: syncing || dutchieStatus !== 'connected' ? 'default' : 'pointer',
+              width: '100%',
+            }}
+          >
+            {syncing ? 'Syncing from Dutchie...' : 'Sync from Dutchie'}
+          </button>
+        </div>
+
+        {/* Dutchie Sync Results */}
+        {syncResult && syncResult.status === 'ok' && (
+          <div style={{
+            background: '#e8f5e9', borderRadius: 12, padding: 20, marginBottom: 20,
+            border: '2px solid #3a7b3c',
+          }}>
+            <h3 style={{ fontFamily: 'Cooper Black, Georgia, serif', color: '#3a7b3c', margin: '0 0 10px' }}>
+              Dutchie Sync Complete!
+            </h3>
+            <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#333', margin: '4px 0' }}>
+              Products from Dutchie: {syncResult.dutchieProducts}
+            </p>
+            <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#333', margin: '4px 0' }}>
+              Products synced: {syncResult.productsUpserted}
+            </p>
+            <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#333', margin: '4px 0' }}>
+              Products deactivated (removed from menu): {syncResult.productsDeactivated}
+            </p>
+            <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#3a7b3c', margin: '4px 0', fontWeight: 'bold' }}>
+              New brands discovered: {syncResult.newBrands}
+            </p>
+            {syncResult.newBrandNames && syncResult.newBrandNames.length > 0 && (
+              <div style={{ marginTop: 10 }}>
+                <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 13, color: '#666', margin: '0 0 5px' }}>New brands:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {syncResult.newBrandNames.map((n: string) => (
+                    <span key={n} style={{
+                      background: '#3a7b3c', color: '#fff', borderRadius: 20,
+                      padding: '3px 10px', fontSize: 12, fontFamily: 'Cooper Light, Georgia, serif',
+                    }}>{n}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {syncResult?.status === 'error' && (
+          <div style={{
+            background: '#ffebee', borderRadius: 12, padding: 20, marginBottom: 20,
+            border: '2px solid #d32f2f',
+          }}>
+            <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#d32f2f', margin: 0 }}>
+              Dutchie sync error: {syncResult.message}
+            </p>
+          </div>
+        )}
+
+        {/* Manual Upload Section */}
         <div style={{
           background: '#fff', borderRadius: 12, padding: 20, marginBottom: 20,
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)'

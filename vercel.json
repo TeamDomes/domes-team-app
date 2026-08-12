@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/dutchie/sync",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/dutchie/stats",
+      "schedule": "0 12 * * 1"
+    }
+  ]
+}
