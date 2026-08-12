@@ -447,12 +447,16 @@ export default function StatsImportPage() {
         const payHeader = payRows[payHeaderIdx]
         const fnIdx = payHeader.indexOf('First Name')
         const lnIdx = payHeader.indexOf('Last Name')
+        const posIdx = payHeader.indexOf('Position')
         const regIdx = payHeader.indexOf('Regular')
         const otIdx = payHeader.indexOf('OT')
         const dotIdx = payHeader.indexOf('Double OT')
         for (let i = payHeaderIdx + 1; i < payRows.length; i++) {
           const row = payRows[i]
           if (!row[fnIdx]) continue
+          // Only use "Total" rows — skip position-specific rows to avoid double-counting
+          const position = (row[posIdx] || '').trim()
+          if (posIdx >= 0 && position && position !== 'Total') continue
           const fullName = (row[fnIdx] + ' ' + (row[lnIdx] || '')).trim()
           const member = findMember(fullName, team)
           if (!member) continue
