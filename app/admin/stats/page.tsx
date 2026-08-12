@@ -432,68 +432,52 @@ export default function StatsImportPage() {
       }
 
       // ── 6. Parse Timesheets/Payroll for hours worked + total days (optional) ──
+      // Uses the Entries sheet: one row per shift. Sum hours and count unique dates.
       const hoursData: Record<string, number> = {}
       const timesheetDays: Record<string, number> = {}
       if (payrollFile) {
         const buffer = await payrollFile.arrayBuffer()
         const workbook = XLSX.read(buffer, { type: 'array' })
 
-        // Parse Summary By User (or first sheet) for hours
-        const summaryName = workbook.SheetNames.find(s => s.toLowerCase().includes('summary by user')) || workbook.SheetNames[0]
-        const summarySheet = workbook.Sheets[summaryName]
-        const payRows: string[][] = XLSX.utils.sheet_to_json(summarySheet, { header: 1, defval: '' }).map((r: any) => r.map((c: any) => String(c).trim()))
-        let payHeaderIdx = payRows.findIndex(r => r[0] === 'First Name')
-        if (payHeaderIdx < 0) payHeaderIdx = 0
-        const payHeader = payRows[payHeaderIdx]
-        const fnIdx = payHeader.indexOf('First Name')
-        const lnIdx = payHeader.indexOf('Last Name')
-        const posIdx = payHeader.indexOf('Position')
-        const regIdx = payHeader.indexOf('Regular')
-        const otIdx = payHeader.indexOf('OT')
-        const dotIdx = payHeader.indexOf('Double OT')
-        for (let i = payHeaderIdx + 1; i < payRows.length; i++) {
-          const row = payRows[i]
+        // Find the Entries sheet (primary source for both hours and days)
+        const entriesName = workbook.SheetNames.find(s => s.toLowerCase() === 'entries') || workbook.SheetNames[0]
+        const entriesSheet = workbook.Sheets[entriesName]
+        const entryRows: string[][] = XLSX.utils.sheet_to_json(entriesSheet, { header: 1, defval: '' }).map((r: any) => r.map((c: any) => String(c).trim()))
+        let entHeaderIdx = entryRows.findIndex(r => r[0] === 'First Name')
+        if (entHeaderIdx < 0) entHeaderIdx = 0
+        const entHeader = entryRows[entHeaderIdx]
+        const fnIdx = entHeader.indexOf('First Name')
+        const lnIdx = entHeader.indexOf('Last Name')
+        const dateIdx = entHeader.indexOf('Date')
+        const regIdx = entHeader.indexOf('Regular')
+        const otIdx = entHeader.indexOf('OT')
+        const dotIdx = entHeader.indexOf('Double OT')
+
+        const memberDays: Record<string, Set<string>> = {}
+
+        for (let i = entHeaderIdx + 1; i < entryRows.length; i++) {
+          const row = entryRows[i]
           if (!row[fnIdx]) continue
-          // Only use "Total" rows — skip position-specific rows to avoid double-counting
-          const position = (row[posIdx] || '').trim()
-          if (posIdx >= 0 && position && position !== 'Total') continue
           const fullName = (row[fnIdx] + ' ' + (row[lnIdx] || '')).trim()
           const member = findMember(fullName, team)
           if (!member) continue
+
+          // Sum hours from each shift entry
           const reg = parseFloat(row[regIdx] || '0') || 0
           const ot = parseFloat(row[otIdx] || '0') || 0
           const dot = parseFloat(row[dotIdx] || '0') || 0
           hoursData[member.id] = (hoursData[member.id] || 0) + reg + ot + dot
+
+          // Track unique dates for day count
+          const date = row[dateIdx] || ''
+          const dateKey = date.split(' ')[0]
+          if (!dateKey) continue
+          if (!memberDays[member.id]) memberDays[member.id] = new Set()
+          memberDays[member.id].add(dateKey)
         }
 
-        // Parse Entries sheet for unique days worked per person
-        const entriesName = workbook.SheetNames.find(s => s.toLowerCase() === 'entries')
-        if (entriesName) {
-          const entriesSheet = workbook.Sheets[entriesName]
-          const entryRows: string[][] = XLSX.utils.sheet_to_json(entriesSheet, { header: 1, defval: '' }).map((r: any) => r.map((c: any) => String(c).trim()))
-          let entHeaderIdx = entryRows.findIndex(r => r[0] === 'First Name')
-          if (entHeaderIdx < 0) entHeaderIdx = 0
-          const entHeader = entryRows[entHeaderIdx]
-          const eFnIdx = entHeader.indexOf('First Name')
-          const eLnIdx = entHeader.indexOf('Last Name')
-          const eDateIdx = entHeader.indexOf('Date')
-          const memberDays: Record<string, Set<string>> = {}
-          for (let i = entHeaderIdx + 1; i < entryRows.length; i++) {
-            const row = entryRows[i]
-            if (!row[eFnIdx]) continue
-            const fullName = (row[eFnIdx] + ' ' + (row[eLnIdx] || '')).trim()
-            const member = findMember(fullName, team)
-            if (!member) continue
-            const date = row[eDateIdx] || ''
-            // Extract just the date portion (handles datetime strings like "8/4/2026 12:55")
-            const dateKey = date.split(' ')[0]
-            if (!dateKey) continue
-            if (!memberDays[member.id]) memberDays[member.id] = new Set()
-            memberDays[member.id].add(dateKey)
-          }
-          for (const [id, days] of Object.entries(memberDays)) {
-            timesheetDays[id] = days.size
-          }
+        for (const [id, days] of Object.entries(memberDays)) {
+          timesheetDays[id] = days.size
         }
       }
 
@@ -543,32 +527,14 @@ export default function StatsImportPage() {
         if (memberId in bigBasketData) record.big_basket_count = bigBasketData[memberId]
         if (memberId in hoursData) record.hours_worked = Math.round(hoursData[memberId] * 100) / 100
 
-        // Only set fields from uploaded files — don't wipe existing data
-        // Check if a row already exists
-        const { data: existing } = await supabase
+        // Upsert: inserts if no row exists, updates only the provided columns if it does
+        const { error: upsertErr } = await supabase
           .from('weekly_stats')
-          .select('id')
-          .eq('team_member_id', memberId)
-          .eq('week_ending', weekEnding)
-          .single()
+          .upsert(record, { onConflict: 'team_member_id,week_ending' })
 
-        let err: any = null
-        if (existing) {
-          // Update only the fields we have new data for
-          const { error } = await supabase
-            .from('weekly_stats')
-            .update(record)
-            .eq('team_member_id', memberId)
-            .eq('week_ending', weekEnding)
-          err = error
-        } else {
-          const { error } = await supabase.from('weekly_stats').insert(record)
-          err = error
-        }
-
-        if (err) {
-          console.error('Upsert error for', memberId, err)
-          alert('Save failed for ' + (team.find((t: any) => t.id === memberId)?.full_name || memberId) + ': ' + err.message)
+        if (upsertErr) {
+          console.error('Upsert error for', memberId, upsertErr)
+          alert('Save failed for ' + (team.find((t: any) => t.id === memberId)?.full_name || memberId) + ': ' + upsertErr.message)
           continue
         }
         imported++
