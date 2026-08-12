@@ -10,6 +10,8 @@ export default function BrandPage() {
   const router = useRouter()
   const [brand, setBrand] = useState<any>(null)
   const [products, setProducts] = useState<any[]>([])
+  const [unavailable, setUnavailable] = useState<any[]>([])
+  const [showUnavailable, setShowUnavailable] = useState(false)
   const [loading, setLoading] = useState(true)
   const [quiz, setQuiz] = useState<any[]>([])
   const [answers, setAnswers] = useState<Record<number, string>>({})
@@ -31,7 +33,7 @@ export default function BrandPage() {
       if (!brandData) { setLoading(false); return }
       setBrand(brandData)
 
-      // Load products under this brand
+      // Load active products under this brand
       const { data: prods } = await supabase
         .from('products')
         .select('id, name, category')
@@ -40,6 +42,16 @@ export default function BrandPage() {
         .order('category')
         .order('name')
       setProducts(prods || [])
+
+      // Load inactive/unavailable products
+      const { data: inactiveProds } = await supabase
+        .from('products')
+        .select('id, name, category')
+        .eq('brand', brandData.name)
+        .eq('is_active', false)
+        .order('category')
+        .order('name')
+      setUnavailable(inactiveProds || [])
 
       // Generate quiz
       generateQuiz(brandData, prods || [])
@@ -265,6 +277,43 @@ export default function BrandPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Temporarily Unavailable */}
+          {unavailable.length > 0 && (
+            <div style={{
+              background: '#fff', borderRadius: 16, overflow: 'hidden',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginBottom: 20,
+            }}>
+              <button
+                onClick={() => setShowUnavailable(!showUnavailable)}
+                style={{
+                  width: '100%', background: '#e8e8e8', padding: '12px 20px',
+                  border: 'none', cursor: 'pointer', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                }}
+              >
+                <span style={{ fontFamily: 'Cooper Black, serif', fontSize: 14, color: '#888' }}>
+                  Temporarily Unavailable ({unavailable.length})
+                </span>
+                <span style={{ fontSize: 14, color: '#888' }}>{showUnavailable ? '▲' : '▼'}</span>
+              </button>
+              {showUnavailable && (
+                <div style={{ padding: 16 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {unavailable.map((p: any) => {
+                      const displayName = p.name.includes('|') ? p.name.split('|').slice(1).join('|').trim() : p.name
+                      return (
+                        <span key={p.id} style={{
+                          background: '#f0f0f0', borderRadius: 20, padding: '5px 12px',
+                          fontFamily: 'Cooper Light, serif', fontSize: 12, color: '#999',
+                        }}>{displayName}</span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
