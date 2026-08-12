@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { awardPoints } from '@/lib/points'
 
 function parseCSVLine(line: string): string[] {
   const result: string[] = []
@@ -251,12 +252,36 @@ export default function BingoAdminPage() {
 
   const handleSave = async () => {
     setSaving(true); setMessage('')
+    // Map square columns to point values and activity names
+    const squarePoints: Record<string, { points: number; activity: string }> = {
+      square_b: { points: 15, activity: 'bingo_square' },       // Upsell
+      square_i: { points: 15, activity: 'bingo_square' },       // Product Knowledge
+      square_n: { points: 10, activity: 'bingo_on_time' },      // On Time
+      square_g: { points: 25, activity: 'bingo_drawer' },       // Drawer
+      square_o: { points: 0, activity: 'bingo_google_review' }, // Google Review (points come from Wall of Love)
+    }
     for (const p of budtenders) {
       const pc = changes[p.team_member_id]; if (!pc) continue
       const u: any = { ...pc }; let f = 0
       for (const sq of ['square_b','square_i','square_n','square_g','square_o']) { if (u[sq] ?? p[sq]) f++ }
       u.squares_filled = f; u.has_bingo = f === 5
       await supabase.from('bingo_squares').update(u).eq('id', p.id)
+
+      // Award points for newly checked squares
+      for (const [sq, config] of Object.entries(squarePoints)) {
+        const wasChecked = p[sq] === true
+        const nowChecked = pc[sq] === true
+        if (nowChecked && !wasChecked && config.points > 0) {
+          const sourceId = `bingo_${sq}_${p.team_member_id}_${cycle?.id}`
+          await awardPoints(p.team_member_id, config.points, config.activity, sourceId)
+        }
+      }
+
+      // Award BINGO win points if they just completed all 5
+      if (u.has_bingo && !p.has_bingo) {
+        const sourceId = `bingo_win_${p.team_member_id}_${cycle?.id}`
+        await awardPoints(p.team_member_id, 1500, 'bingo_win', sourceId)
+      }
     }
     setChanges({}); setSaving(false); setMessage('Saved!')
     if (cycle) {
