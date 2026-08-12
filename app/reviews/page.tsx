@@ -90,19 +90,20 @@ export default function StaffReviews() {
       <div style={{ padding: 20, maxWidth: 800, margin: '0 auto', fontFamily: 'Cooper Light, system-ui, sans-serif' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', fontSize: 26, margin: '0 0 4px', color: '#f37029', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
-              Staff Reviews
-            </h1>
-            <p style={{ margin: 0, fontSize: 13, color: '#fff', background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>Share your product knowledge with the team</p>
-          </div>
-          <button onClick={() => router.push('/dashboard')} style={{
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <a href="/dashboard" style={{
             background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
             padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
             fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          }}>Dashboard</button>
+            textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+          }}>{'←'} Dashboard</a>
+        </div>
+
+        <div style={{ marginBottom: 24, marginTop: 10 }}>
+          <h1 style={{ fontFamily: 'Cooper Black, serif', fontSize: 26, margin: '0 0 4px', color: '#f37029', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+            Staff Reviews
+          </h1>
+          <p style={{ margin: 0, fontSize: 13, color: '#fff', background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>Share your product knowledge with the team</p>
         </div>
 
         {/* Write a Review */}

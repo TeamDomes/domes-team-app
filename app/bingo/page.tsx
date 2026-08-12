@@ -41,12 +41,18 @@ export default function BingoPage() {
   return (
     <MoodWrapper><div style={{ fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <div>
-            <h1 style={{ color: '#f37029', fontSize: '28px', fontWeight: 'bold', margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>BINGO</h1>
-            {cycle && <p style={{ color: '#fff', fontSize: '13px', margin: 0, background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>Cycle started {new Date(cycle.cycle_start_date).toLocaleDateString()}</p>}
-          </div>
-<div style={{ display: 'flex', gap: '8px' }}><button onClick={() => router.push('/bingo/admin')} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer', color: '#3a7b3c', fontWeight: 'bold' }}>Admin</button><button onClick={() => router.push('/dashboard')} style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 20, padding: '8px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>Dashboard</button></div>
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <a href="/dashboard" style={{
+            background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
+            padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+            fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+            textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+          }}>{'←'} Dashboard</a>
+          <button onClick={() => router.push('/bingo/admin')} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer', color: '#3a7b3c', fontWeight: 'bold', marginLeft: 8 }}>Admin</button>
+        </div>
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ color: '#f37029', fontSize: '28px', fontWeight: 'bold', margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>BINGO</h1>
+          {cycle && <p style={{ color: '#fff', fontSize: '13px', margin: 0, background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>Cycle started {new Date(cycle.cycle_start_date).toLocaleDateString()}</p>}
         </div>
         <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
           {Object.values(squareLabels).map(sq => (<div key={sq.letter}><div style={{ fontSize: '14px', color: '#333', fontWeight: 'bold', marginBottom: '2px' }}><span style={{ color: '#3a7b3c', marginRight: '4px' }}>{sq.letter}</span>{sq.name}</div><div style={{ fontSize: '11px', color: '#888', lineHeight: '1.3' }}>{sq.desc}</div></div>))}

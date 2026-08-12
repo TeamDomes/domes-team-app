@@ -72,6 +72,7 @@ export default function Dashboard() {
   const [lbWeek, setLbWeek] = useState('')
   const [currentMood, setCurrentMood] = useState<MoodKey>(DEFAULT_MOOD)
   const [showMoodPicker, setShowMoodPicker] = useState(false)
+  const [newProducts, setNewProducts] = useState<any[]>([])
 
   useEffect(() => {
     async function loadUser() {
@@ -90,6 +91,7 @@ export default function Dashboard() {
       }
       await loadCelebrations()
       await loadLeaderboard()
+      await loadNewProducts()
       setLoading(false)
     }
     loadUser()
@@ -125,6 +127,20 @@ export default function Dashboard() {
         .slice(0, 3)
     })
     setLeaderboard(lb)
+  }
+
+  async function loadNewProducts() {
+    // Get products added in the last 7 days
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    const { data } = await supabase
+      .from('products')
+      .select('id, name, brand, category, created_at')
+      .gte('created_at', weekAgo.toISOString())
+      .eq('is_active', true)
+      .order('brand')
+      .order('name')
+    setNewProducts(data || [])
   }
 
   async function checkQuestionnaire(memberId: string) {
@@ -424,6 +440,61 @@ export default function Dashboard() {
                         ))}
                       </div>
                     </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* New Products This Week */}
+          {newProducts.length > 0 && (
+            <div style={{
+              padding: '20px 22px', marginBottom: 16,
+              background: '#f4e6b4', borderRadius: 14,
+              border: '1px solid rgba(84,60,45,0.15)',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <span style={{
+                  background: '#f37029', color: '#fff', fontFamily: 'Cooper Black, serif',
+                  fontSize: 11, padding: '4px 10px', borderRadius: 20, letterSpacing: 0.8,
+                  textTransform: 'uppercase' as const,
+                }}>NEW</span>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#543c2d', letterSpacing: 1.5, textTransform: 'uppercase' as const, fontFamily: 'Cooper Black, serif' }}>
+                  New Products This Week
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {newProducts.map((p: any) => {
+                  // Extract display name: everything after the | or the full name
+                  const displayName = p.name.includes('|') ? p.name.split('|').slice(1).join('|').trim() : p.name
+                  return (
+                    <a
+                      key={p.id}
+                      href={`/product/${p.id}`}
+                      className="tile-hover"
+                      style={{
+                        background: '#fff', borderRadius: 10, padding: '10px 14px',
+                        textDecoration: 'none', display: 'flex', flexDirection: 'column',
+                        gap: 2, border: '1px solid rgba(84,60,45,0.1)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                        minWidth: 140, flex: '1 1 calc(33% - 8px)',
+                      }}
+                    >
+                      <span style={{
+                        fontFamily: 'Cooper Black, serif', fontSize: 13, color: '#543c2d',
+                        lineHeight: 1.3,
+                      }}>{displayName}</span>
+                      <span style={{
+                        fontFamily: 'Cooper Light, serif', fontSize: 11, color: '#888',
+                      }}>{p.brand}</span>
+                      {p.category && (
+                        <span style={{
+                          fontFamily: 'Cooper Light, serif', fontSize: 10, color: '#3a7b3c',
+                          marginTop: 2,
+                        }}>{p.category}</span>
+                      )}
+                    </a>
                   )
                 })}
               </div>

@@ -94,14 +94,18 @@ export default function SpottedPage() {
   return (
     <MoodWrapper><div style={{ padding: '20px' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: 0, textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
-            Spotted in the Wild
-          </h1>
-          <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-            {'←'} Dashboard
-          </a>
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <a href="/dashboard" style={{
+            background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
+            padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+            fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+            textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+          }}>{'←'} Dashboard</a>
         </div>
+
+        <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: '10px 0 20px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+          Spotted in the Wild
+        </h1>
 
         <p style={{ color: '#fff', marginBottom: 16, fontSize: 13, background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>
           Seen any of our products, brands, or anything else inspiring out in the world? Pin it here!

@@ -190,9 +190,11 @@ export default function CatalogImportPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f4e6b4', padding: 20 }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block' }}>
-          {'←'} Dashboard
-        </a>
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block' }}>
+            {'←'} Dashboard
+          </a>
+        </div>
 
         <h1 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 24, color: '#543c2d', marginTop: 10 }}>
           Product Catalog Import

@@ -288,15 +288,18 @@ export default function BingoAdminPage() {
   return (
     <div style={{minHeight:'100vh',backgroundColor:'#f4e6b4',fontFamily:'system-ui, sans-serif',padding:'20px'}}>
       <div style={{maxWidth:'900px',margin:'0 auto'}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}}>
-          <div>
-            <h1 style={{color:'#3a7b3c',fontSize:'28px',fontWeight:'bold',margin:'0 0 4px'}}>BINGO Admin</h1>
-            {cycle && <p style={{color:'#888',fontSize:'13px',margin:0}}>Cycle started {new Date(cycle.cycle_start_date).toLocaleDateString()}</p>}
-          </div>
-          <div style={{display:'flex',gap:'8px'}}>
-            <button onClick={()=>router.push('/bingo')} style={btnO}>← BINGO</button>
-            <button onClick={()=>router.push('/dashboard')} style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>Dashboard</button>
-          </div>
+        <div style={{textAlign:'right',marginBottom:10}}>
+          <a href="/dashboard" style={{
+            background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
+            padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+            fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+            textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+          }}>{'←'} Dashboard</a>
+          <button onClick={()=>router.push('/bingo')} style={{...btnO, marginLeft: 8}}>{'←'} BINGO</button>
+        </div>
+        <div style={{marginBottom:'24px'}}>
+          <h1 style={{color:'#3a7b3c',fontSize:'28px',fontWeight:'bold',margin:'0 0 4px'}}>BINGO Admin</h1>
+          {cycle && <p style={{color:'#888',fontSize:'13px',margin:0}}>Cycle started {new Date(cycle.cycle_start_date).toLocaleDateString()}</p>}
         </div>
         {!cycle && <div style={card}><p style={{color:'#888',textAlign:'center'}}>No active BINGO cycle.</p></div>}
         {cycle && (<>

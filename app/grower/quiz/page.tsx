@@ -181,16 +181,21 @@ export default function GrowerQuizPage() {
   if (!brand) return (
     <div style={{ minHeight: '100vh', background: '#543c2d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 15 }}>
       <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 18, color: '#f4e6b4' }}>No brand featured this week.</p>
-      <a href="/grower" style={{ color: '#ffcb1f', fontFamily: 'Cooper Light, Georgia, serif' }}>{'←'} Back to Grower of the Week</a>
+      <a href="/grower" style={{ color: '#ffcb1f', fontFamily: 'Cooper Light, Georgia, serif' }}>{'←'} Back to Partner Spotlight</a>
     </div>
   )
 
   return (
     <div style={{ minHeight: '100vh', background: '#543c2d', padding: 20 }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        <a href="/grower" style={{ color: '#ffcb1f', textDecoration: 'none', fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14 }}>
-          {'←'} Back to {brand.name}
-        </a>
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <a href="/dashboard" style={{
+            background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
+            padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+            fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+            textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+          }}>{'←'} Dashboard</a>
+        </div>
 
         <div style={{ textAlign: 'center', marginTop: 15, marginBottom: 25 }}>
           <h1 style={{ fontFamily: 'Cooper Black, Georgia, serif', fontSize: 26, color: '#ffcb1f', margin: 0 }}>
@@ -311,7 +316,7 @@ export default function GrowerQuizPage() {
                   textDecoration: 'none', marginTop: 10
                 }}
               >
-                {'←'} Back to Grower of the Week
+                {'←'} Back to Partner Spotlight
               </a>
             )}
           </>

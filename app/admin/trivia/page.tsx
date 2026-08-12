@@ -100,29 +100,25 @@ export default function TriviaAdminPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f4e6b4', fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: '0 0 4px' }}>
-              Trivia Manager
-            </h1>
-            <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
-              {questions.length} questions ({counts.Easy} easy, {counts.Medium} medium, {counts.Hard} hard)
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              style={{
-                background: '#3a7b3c', color: 'white', border: 'none', borderRadius: 8,
-                padding: '10px 16px', fontFamily: 'Cooper Black, serif', fontSize: 14, cursor: 'pointer',
-              }}
-            >
-              {showForm ? 'Cancel' : '+ Add Question'}
-            </button>
-            <a href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'flex', alignItems: 'center' }}>
-              {'<-'} Dashboard
-            </a>
-          </div>
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{
+              background: '#3a7b3c', color: 'white', border: 'none', borderRadius: 8,
+              padding: '10px 16px', fontFamily: 'Cooper Black, serif', fontSize: 14, cursor: 'pointer', marginRight: 8,
+            }}
+          >
+            {showForm ? 'Cancel' : '+ Add Question'}
+          </button>
+          <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block' }}>{'←'} Dashboard</a>
+        </div>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#3a7b3c', fontSize: 28, margin: '0 0 4px' }}>
+            Trivia Manager
+          </h1>
+          <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
+            {questions.length} questions ({counts.Easy} easy, {counts.Medium} medium, {counts.Hard} hard)
+          </p>
         </div>
 
         {/* Add Question Form */}

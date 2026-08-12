@@ -220,15 +220,14 @@ export default function WordlePage() {
   return (
     <MoodWrapper><div style={{ fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
       <div style={{ maxWidth: 500, margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>{'←'} Dashboard</a>
-          <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: 0, textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
-              {'🌿'} Domes Wordle
-            </h1>
-            <p style={{ fontSize: 13, color: '#fff', margin: '2px 0 0', background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>{wordLen} letters today</p>
-          </div>
-          <div style={{ width: 80 }} />
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block' }}>{'←'} Dashboard</a>
+        </div>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: 0, textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+            {'🌿'} Domes Wordle
+          </h1>
+          <p style={{ fontSize: 13, color: '#fff', margin: '2px 0 0', background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>{wordLen} letters today</p>
         </div>
 
         {message && (

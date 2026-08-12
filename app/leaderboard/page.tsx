@@ -126,20 +126,24 @@ export default function LeaderboardPage() {
       `}</style>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div>
-            <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
-              {'\u{1F3C6}'} Leaderboard
-            </h1>
-            <p style={{ fontSize: 13, color: '#fff', margin: 0, background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>
-              {viewMode === 'week'
-                ? `Week ending ${latestWeek ? new Date(latestWeek + 'T12:00:00').toLocaleDateString() : '—'}`
-                : rollingLabel}
-            </p>
-          </div>
-          <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-            {'←'} Dashboard
-          </a>
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <a href="/dashboard" style={{
+            background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
+            padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+            fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+            textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+          }}>{'←'} Dashboard</a>
+        </div>
+
+        <div style={{ marginBottom: 20, marginTop: 10 }}>
+          <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+            {'\u{1F3C6}'} Leaderboard
+          </h1>
+          <p style={{ fontSize: 13, color: '#fff', margin: 0, background: 'rgba(0,0,0,0.45)', padding: '4px 12px', borderRadius: 20, display: 'inline-block' }}>
+            {viewMode === 'week'
+              ? `Week ending ${latestWeek ? new Date(latestWeek + 'T12:00:00').toLocaleDateString() : '—'}`
+              : rollingLabel}
+          </p>
         </div>
 
         {/* Toggle */}

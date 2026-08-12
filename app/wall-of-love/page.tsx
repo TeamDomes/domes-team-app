@@ -120,13 +120,13 @@ export default function WallOfLovePage() {
       <div style={{ fontFamily: 'Cooper Light, system-ui, sans-serif', padding: 20 }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ textAlign: 'right', marginBottom: 10 }}>
             <a href="/dashboard" style={{
               background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
-              padding: '8px 16px', borderRadius: 20, fontSize: 13, color: '#333',
-              textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-              fontFamily: 'Cooper Light, serif',
-            }}>{'<'} Dashboard</a>
+              padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+              fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+              textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+            }}>{'←'} Dashboard</a>
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: 20 }}>

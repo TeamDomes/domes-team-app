@@ -353,13 +353,13 @@ export default function BogglePage() {
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
 
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ textAlign: 'right', marginBottom: 10 }}>
             <a href="/dashboard" style={{
               background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
-              padding: '8px 16px', borderRadius: 20, fontSize: 13, color: '#333',
-              textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-              fontFamily: 'Cooper Light, serif',
-            }}>{'<'} Dashboard</a>
+              padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+              fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+              textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+            }}>{'←'} Dashboard</a>
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -663,10 +663,11 @@ export default function BogglePage() {
                   fontSize: 16, cursor: 'pointer',
                 }}>Play Again</button>
                 <a href="/dashboard" style={{
-                  flex: 1, padding: '14px 20px', background: 'rgba(255,255,255,0.9)', color: '#333',
-                  border: '1px solid rgba(0,0,0,0.15)', borderRadius: 10, fontFamily: 'Cooper Black, serif',
-                  fontSize: 16, textDecoration: 'none', textAlign: 'center',
-                }}>Dashboard</a>
+                  flex: 1, padding: '14px 20px', background: 'rgba(255,255,255,0.92)', color: '#333',
+                  border: '1px solid rgba(0,0,0,0.12)', borderRadius: 20, fontFamily: 'Cooper Light, system-ui, sans-serif',
+                  fontSize: 13, textDecoration: 'none', textAlign: 'center', cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                }}>{'←'} Dashboard</a>
               </div>
             </>
           )}

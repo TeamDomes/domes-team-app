@@ -284,7 +284,16 @@ export default function MyStatsPage() {
     <MoodWrapper>
       <div style={{ padding: 20 }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ textAlign: 'right', marginBottom: 10 }}>
+          <a href="/dashboard" style={{
+            background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)',
+            padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
+            fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
+            textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
+          }}>{'←'} Dashboard</a>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, marginTop: 16 }}>
           <div>
             <h1 style={{ fontFamily: 'Cooper Black, serif', color: '#f37029', fontSize: 28, margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
               {isAdmin && viewingUser?.id !== currentUser?.id ? `${viewingUser?.full_name}'s Stats` : 'My Stats'}
@@ -295,28 +304,23 @@ export default function MyStatsPage() {
               </p>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {isAdmin && (
-              <select
-                value={viewingUser?.id || ''}
-                onChange={e => switchUser(e.target.value)}
-                style={{
-                  padding: '8px 12px', borderRadius: 8, border: '2px solid #e0d9c8',
-                  fontSize: 13, fontFamily: 'Cooper Light, system-ui, sans-serif',
-                  background: 'white', color: '#333', cursor: 'pointer',
-                }}
-              >
-                {teamMembers.map((t: any) => (
-                  <option key={t.id} value={t.id}>
-                    {t.full_name}{t.id === currentUser?.id ? ' (you)' : ''} — {t.role === 'Lead' ? 'Lead' : t.type}
-                  </option>
-                ))}
-              </select>
-            )}
-            <a href="/dashboard" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.12)', padding: '8px 16px', borderRadius: 20, fontSize: 13, cursor: 'pointer', fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333', textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}>
-              {'←'} Dashboard
-            </a>
-          </div>
+          {isAdmin && (
+            <select
+              value={viewingUser?.id || ''}
+              onChange={e => switchUser(e.target.value)}
+              style={{
+                padding: '8px 12px', borderRadius: 8, border: '2px solid #e0d9c8',
+                fontSize: 13, fontFamily: 'Cooper Light, system-ui, sans-serif',
+                background: 'white', color: '#333', cursor: 'pointer',
+              }}
+            >
+              {teamMembers.map((t: any) => (
+                <option key={t.id} value={t.id}>
+                  {t.full_name}{t.id === currentUser?.id ? ' (you)' : ''} — {t.role === 'Lead' ? 'Lead' : t.type}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {stats.length === 0 ? (
