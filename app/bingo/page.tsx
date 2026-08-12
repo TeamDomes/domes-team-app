@@ -10,12 +10,15 @@ export default function BingoPage() {
   const [cycle, setCycle] = useState<any>(null)
   const [winners, setWinners] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+      const { data: me } = await supabase.from('team').select('role').eq('email', user.email).single()
+      setIsAdmin(me?.role === 'Admin' || me?.role === 'Lead')
       const { data: cycleData } = await supabase.from('bingo_cycles').select('*').eq('status', 'Active').single()
       setCycle(cycleData)
       if (!cycleData) { setLoading(false); return }
@@ -48,7 +51,7 @@ export default function BingoPage() {
             fontFamily: 'Cooper Light, system-ui, sans-serif', color: '#333',
             textDecoration: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', display: 'inline-block',
           }}>{'←'} Dashboard</a>
-          <button onClick={() => router.push('/bingo/admin')} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer', color: '#3a7b3c', fontWeight: 'bold', marginLeft: 8 }}>Admin</button>
+          {isAdmin && <button onClick={() => router.push('/bingo/admin')} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer', color: '#3a7b3c', fontWeight: 'bold', marginLeft: 8 }}>Admin</button>}
         </div>
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{ color: '#f37029', fontSize: '28px', fontWeight: 'bold', margin: '0 0 4px', textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>BINGO</h1>
