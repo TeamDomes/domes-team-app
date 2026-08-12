@@ -130,13 +130,21 @@ export default function Dashboard() {
   }
 
   async function loadNewProducts() {
-    // Get products added in the last 7 days
+    // Find brands added in the last 7 days (detected during catalog import)
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
+    const { data: newBrands } = await supabase
+      .from('brands')
+      .select('name')
+      .gte('created_at', weekAgo.toISOString())
+      .eq('is_active', true)
+    if (!newBrands || newBrands.length === 0) { setNewProducts([]); return }
+    const brandNames = newBrands.map(b => b.name)
+    // Get the products under those new brands
     const { data } = await supabase
       .from('products')
-      .select('id, name, brand, category, created_at')
-      .gte('created_at', weekAgo.toISOString())
+      .select('id, name, brand, category')
+      .in('brand', brandNames)
       .eq('is_active', true)
       .order('brand')
       .order('name')
