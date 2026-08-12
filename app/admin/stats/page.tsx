@@ -222,8 +222,12 @@ export default function StatsImportPage() {
   }
 
   async function handleImport() {
-    if (!aovFile || !upsellFile || !weekEnding) {
-      alert('Please select the AOV and Upsell files plus a week ending date.')
+    if (!weekEnding) {
+      alert('Please select a week ending date.')
+      return
+    }
+    if (!aovFile && !upsellFile && !attendanceFile && cashReconFiles.length === 0 && !salesRawFile && !payrollFile) {
+      alert('Please select at least one report to import.')
       return
     }
 
@@ -231,8 +235,8 @@ export default function StatsImportPage() {
     try {
       const team = teamMembers
 
-      // ── 1. Parse AOV ──
-      const aovRows = await parseFile(aovFile)
+      // ── 1. Parse AOV (optional) ──
+      const aovRows = aovFile ? await parseFile(aovFile) : []
       let aovHeaderIdx = aovRows.findIndex(r => r[0]?.includes('Budtender'))
       if (aovHeaderIdx < 0) aovHeaderIdx = 4
       const aovHeader = aovRows[aovHeaderIdx]
@@ -259,8 +263,8 @@ export default function StatsImportPage() {
         }
       }
 
-      // ── 2. Parse Upsell ──
-      const upsellRows = await parseFile(upsellFile)
+      // ── 2. Parse Upsell (optional) ──
+      const upsellRows = upsellFile ? await parseFile(upsellFile) : []
       let upsellHeaderIdx = upsellRows.findIndex(r => r[0]?.includes('Budtender'))
       if (upsellHeaderIdx < 0) upsellHeaderIdx = 4
       const upsellHeader = upsellRows[upsellHeaderIdx]
@@ -582,7 +586,7 @@ export default function StatsImportPage() {
             Import Weekly Reports
           </h2>
           <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>
-            Upload your Dutchie reports and other data. AOV and Upsell are required; the rest are optional. CSV or Excel accepted.
+            Upload your Dutchie reports and other data. All reports are optional — upload whichever ones you have. CSV or Excel accepted.
           </p>
 
           <div style={{ display: 'grid', gap: 16 }}>
@@ -598,10 +602,10 @@ export default function StatsImportPage() {
               />
             </div>
 
-            {/* Required reports */}
+            {/* Dutchie reports */}
             <div style={{ background: '#f0faf0', borderRadius: 10, padding: 16 }}>
               <p style={{ fontSize: 12, fontWeight: 'bold', color: '#3a7b3c', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: 1 }}>
-                Required (Dutchie)
+                Dutchie Reports
               </p>
               <div style={{ display: 'grid', gap: 12 }}>
                 <div>
@@ -660,12 +664,12 @@ export default function StatsImportPage() {
 
             <button
               onClick={handleImport}
-              disabled={importing || !aovFile || !upsellFile || !weekEnding}
+              disabled={importing || !weekEnding}
               style={{
-                background: (!aovFile || !upsellFile || !weekEnding) ? '#ccc' : '#3a7b3c',
+                background: !weekEnding ? '#ccc' : '#3a7b3c',
                 color: 'white', border: 'none', borderRadius: 10, padding: '14px 20px',
                 fontFamily: 'Cooper Black, serif', fontSize: 16,
-                cursor: (!aovFile || !upsellFile || !weekEnding) ? 'default' : 'pointer',
+                cursor: !weekEnding ? 'default' : 'pointer',
               }}
             >
               {importing ? 'Importing...' : 'Import Stats'}
