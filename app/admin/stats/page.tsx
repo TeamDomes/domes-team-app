@@ -506,26 +506,25 @@ export default function StatsImportPage() {
       let imported = 0
 
       for (const memberId of allMemberIds) {
-        const aov = aovData[memberId] || { netSales: 0, netAOV: 0, orders: 0 }
-        const upsell = upsellData[memberId] || { transactions: 0, upsellTx: 0 }
-        const upsellRate = upsell.transactions > 0
-          ? Math.round((upsell.upsellTx / upsell.transactions) * 10000) / 100
-          : 0
-
-        await supabase
-          .from('weekly_stats')
-          .delete()
-          .eq('team_member_id', memberId)
-          .eq('week_ending', weekEnding)
-
+        // Only include fields from files that were actually uploaded
         const record: any = {
           team_member_id: memberId,
           week_ending: weekEnding,
-          average_basket: aov.netAOV,
-          total_net_sales: aov.netSales,
-          total_orders: aov.orders,
-          upsell_transactions: upsell.upsellTx,
-          upsell_pct: upsellRate,
+        }
+
+        if (aovFile && memberId in aovData) {
+          const aov = aovData[memberId]
+          record.average_basket = aov.netAOV
+          record.total_net_sales = aov.netSales
+          record.total_orders = aov.orders
+        }
+        if (upsellFile && memberId in upsellData) {
+          const upsell = upsellData[memberId]
+          const upsellRate = upsell.transactions > 0
+            ? Math.round((upsell.upsellTx / upsell.transactions) * 10000) / 100
+            : 0
+          record.upsell_transactions = upsell.upsellTx
+          record.upsell_pct = upsellRate
         }
         if (memberId in onTimeData) record.was_on_time = onTimeData[memberId]
         // Total shifts from Timesheets Entries sheet (unique days worked)
@@ -534,19 +533,38 @@ export default function StatsImportPage() {
           const late = lateDays[memberId] || 0
           record.shifts_on_time = timesheetDays[memberId] - late
         }
-        // Drawer: null = no data, 0 = passed all days, >0.50 = worst variance
         if (memberId in drawerResults) {
           record.drawer_variance = Math.round(Math.abs(drawerResults[memberId].worstVariance) * 100) / 100
-        } else {
-          record.drawer_variance = null
         }
         if (memberId in bigBasketData) record.big_basket_count = bigBasketData[memberId]
         if (memberId in hoursData) record.hours_worked = Math.round(hoursData[memberId] * 100) / 100
 
-        const { error: insertErr } = await supabase.from('weekly_stats').insert(record)
-        if (insertErr) {
-          console.error('Insert error for', memberId, insertErr)
-          alert('Insert failed for ' + (team.find((t: any) => t.id === memberId)?.full_name || memberId) + ': ' + insertErr.message)
+        // Only set fields from uploaded files — don't wipe existing data
+        // Check if a row already exists
+        const { data: existing } = await supabase
+          .from('weekly_stats')
+          .select('id')
+          .eq('team_member_id', memberId)
+          .eq('week_ending', weekEnding)
+          .single()
+
+        let err: any = null
+        if (existing) {
+          // Update only the fields we have new data for
+          const { error } = await supabase
+            .from('weekly_stats')
+            .update(record)
+            .eq('team_member_id', memberId)
+            .eq('week_ending', weekEnding)
+          err = error
+        } else {
+          const { error } = await supabase.from('weekly_stats').insert(record)
+          err = error
+        }
+
+        if (err) {
+          console.error('Upsert error for', memberId, err)
+          alert('Save failed for ' + (team.find((t: any) => t.id === memberId)?.full_name || memberId) + ': ' + err.message)
           continue
         }
         imported++
