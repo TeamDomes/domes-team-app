@@ -407,22 +407,21 @@ export default function CatalogImportPage() {
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
         }}>
           <h3 style={{ fontFamily: 'Cooper Black, Georgia, serif', color: '#543c2d', margin: '0 0 10px' }}>
-            All Brands ({brands.filter(b => b.is_active).length} active / {brands.filter(b => !b.is_active).length} retired)
+            Active Brands ({brands.filter(b => b.is_active).length})
           </h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {brands.map((b: any) => (
+            {brands.filter(b => b.is_active).map((b: any) => (
               <span key={b.id} style={{
-                background: b.is_active ? (b.description ? '#3a7b3c' : '#888') : '#d32f2f',
+                background: b.description ? '#3a7b3c' : '#888',
                 color: '#fff', borderRadius: 20, padding: '3px 10px', fontSize: 11,
                 fontFamily: 'Cooper Light, Georgia, serif',
-                opacity: b.is_active ? 1 : 0.6
               }}>
                 {b.name}
               </span>
             ))}
           </div>
           <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 11, color: '#999', marginTop: 10 }}>
-            Green = has info/talking points | Gray = needs info | Red = retired
+            Green = has info/talking points | Gray = needs info
           </p>
         </div>
       </div>
