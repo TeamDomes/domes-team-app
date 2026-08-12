@@ -468,7 +468,7 @@ export default function Dashboard() {
                 {newProducts.map((b: any) => (
                   <a
                     key={b.id}
-                    href={`/grower`}
+                    href={`/brand/${b.id}`}
                     className="tile-hover"
                     style={{
                       background: '#fff', borderRadius: 12, padding: '14px 18px',
