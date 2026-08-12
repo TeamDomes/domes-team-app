@@ -112,9 +112,10 @@ export default function CatalogImportPage() {
         if (!existingNames.has(name)) newBrands.push(name)
       })
 
-      // Insert new brands in batches
+      // Insert new brands in batches (with discovered_date so dashboard can show them)
       if (newBrands.length > 0) {
-        const brandRows = newBrands.map(name => ({ name, is_active: true }))
+        const today = new Date().toISOString().split('T')[0]
+        const brandRows = newBrands.map(name => ({ name, is_active: true, discovered_date: today }))
         for (let i = 0; i < brandRows.length; i += 100) {
           await supabase.from('brands').insert(brandRows.slice(i, i + 100))
         }
