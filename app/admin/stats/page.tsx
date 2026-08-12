@@ -283,11 +283,11 @@ export default function StatsImportPage() {
         }
       }
 
-      // ── 3. Parse Attendance (optional) ──
-      // Count unique DAYS per person as shifts (not rows).
-      // Only the first clock-in of each day determines lateness.
+      // ── 3. Parse Attendance Notices (optional) ──
+      // Only flags lateness — does NOT count total shifts.
+      // Total shifts come from the Timesheets Entries sheet (section 6).
       const onTimeData: Record<string, boolean> = {}
-      const shiftCounts: Record<string, { total: number; onTime: number }> = {}
+      const lateDays: Record<string, number> = {}
       if (attendanceFile) {
         const attRows = await parseFile(attendanceFile)
         let attHeaderIdx = attRows.findIndex(r => r.some(c => c === 'Name'))
@@ -319,39 +319,29 @@ export default function StatsImportPage() {
           // Track earliest shift start to identify the first clock-in of the day
           const shiftStart = shiftTime.split(' - ')[0] || ''
           if (!day.earliestShift || (shiftStart && shiftStart < day.earliestShift)) {
-            // This is an earlier shift — only this one's clock-in status matters
             if (type === 'late on clock-in') {
               day.lateClockIn = true
             } else if (type === 'early on clock-in' || type === 'no shift on clock-in') {
-              // Earlier shift was on time — reset any late from a later-listed shift
               day.lateClockIn = false
             }
             if (shiftStart) day.earliestShift = shiftStart
           } else if (shiftStart === day.earliestShift) {
-            // Same shift — update clock-in status
             if (type === 'late on clock-in') day.lateClockIn = true
           }
-          // Clock-out events and later shifts are ignored for lateness
 
           if (type === 'no show on shift') day.noShow = true
         }
 
-        // Now count unique days and determine lateness
-        const lateMembers = new Set<string>()
+        // Count late days per member and flag overall lateness
         for (const [memberId, dates] of Object.entries(dayMap)) {
-          if (!(memberId in onTimeData)) onTimeData[memberId] = true
-          if (!shiftCounts[memberId]) shiftCounts[memberId] = { total: 0, onTime: 0 }
+          onTimeData[memberId] = true
+          lateDays[memberId] = 0
           for (const day of Object.values(dates)) {
-            shiftCounts[memberId].total++
             if (day.lateClockIn || day.noShow) {
-              lateMembers.add(memberId)
-            } else {
-              shiftCounts[memberId].onTime++
+              onTimeData[memberId] = false
+              lateDays[memberId]++
             }
           }
-        }
-        for (const id of lateMembers) {
-          onTimeData[id] = false
         }
       }
 
@@ -441,10 +431,17 @@ export default function StatsImportPage() {
         }
       }
 
-      // ── 6. Parse Payroll Export for hours worked (optional) ──
+      // ── 6. Parse Timesheets/Payroll for hours worked + total days (optional) ──
       const hoursData: Record<string, number> = {}
+      const timesheetDays: Record<string, number> = {}
       if (payrollFile) {
-        const payRows = await parseFile(payrollFile)
+        const buffer = await payrollFile.arrayBuffer()
+        const workbook = XLSX.read(buffer, { type: 'array' })
+
+        // Parse Summary By User (or first sheet) for hours
+        const summaryName = workbook.SheetNames.find(s => s.toLowerCase().includes('summary by user')) || workbook.SheetNames[0]
+        const summarySheet = workbook.Sheets[summaryName]
+        const payRows: string[][] = XLSX.utils.sheet_to_json(summarySheet, { header: 1, defval: '' }).map((r: any) => r.map((c: any) => String(c).trim()))
         let payHeaderIdx = payRows.findIndex(r => r[0] === 'First Name')
         if (payHeaderIdx < 0) payHeaderIdx = 0
         const payHeader = payRows[payHeaderIdx]
@@ -464,6 +461,36 @@ export default function StatsImportPage() {
           const dot = parseFloat(row[dotIdx] || '0') || 0
           hoursData[member.id] = (hoursData[member.id] || 0) + reg + ot + dot
         }
+
+        // Parse Entries sheet for unique days worked per person
+        const entriesName = workbook.SheetNames.find(s => s.toLowerCase() === 'entries')
+        if (entriesName) {
+          const entriesSheet = workbook.Sheets[entriesName]
+          const entryRows: string[][] = XLSX.utils.sheet_to_json(entriesSheet, { header: 1, defval: '' }).map((r: any) => r.map((c: any) => String(c).trim()))
+          let entHeaderIdx = entryRows.findIndex(r => r[0] === 'First Name')
+          if (entHeaderIdx < 0) entHeaderIdx = 0
+          const entHeader = entryRows[entHeaderIdx]
+          const eFnIdx = entHeader.indexOf('First Name')
+          const eLnIdx = entHeader.indexOf('Last Name')
+          const eDateIdx = entHeader.indexOf('Date')
+          const memberDays: Record<string, Set<string>> = {}
+          for (let i = entHeaderIdx + 1; i < entryRows.length; i++) {
+            const row = entryRows[i]
+            if (!row[eFnIdx]) continue
+            const fullName = (row[eFnIdx] + ' ' + (row[eLnIdx] || '')).trim()
+            const member = findMember(fullName, team)
+            if (!member) continue
+            const date = row[eDateIdx] || ''
+            // Extract just the date portion (handles datetime strings like "8/4/2026 12:55")
+            const dateKey = date.split(' ')[0]
+            if (!dateKey) continue
+            if (!memberDays[member.id]) memberDays[member.id] = new Set()
+            memberDays[member.id].add(dateKey)
+          }
+          for (const [id, days] of Object.entries(memberDays)) {
+            timesheetDays[id] = days.size
+          }
+        }
       }
 
       // ── Combine & upsert ──
@@ -474,6 +501,7 @@ export default function StatsImportPage() {
         ...Object.keys(drawerResults),
         ...Object.keys(bigBasketData),
         ...Object.keys(hoursData),
+        ...Object.keys(timesheetDays),
       ])
       let imported = 0
 
@@ -500,9 +528,11 @@ export default function StatsImportPage() {
           upsell_pct: upsellRate,
         }
         if (memberId in onTimeData) record.was_on_time = onTimeData[memberId]
-        if (shiftCounts[memberId]) {
-          record.shifts_on_time = shiftCounts[memberId].onTime
-          record.total_shifts = shiftCounts[memberId].total
+        // Total shifts from Timesheets Entries sheet (unique days worked)
+        if (memberId in timesheetDays) {
+          record.total_shifts = timesheetDays[memberId]
+          const late = lateDays[memberId] || 0
+          record.shifts_on_time = timesheetDays[memberId] - late
         }
         // Drawer: null = no data, 0 = passed all days, >0.50 = worst variance
         if (memberId in drawerResults) {
