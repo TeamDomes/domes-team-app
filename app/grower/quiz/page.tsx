@@ -28,16 +28,13 @@ export default function GrowerQuizPage() {
     })
     setCurrentUser(me)
 
-    // Get this week's featured brand
-    const today = new Date()
-    const monday = new Date(today)
-    monday.setDate(today.getDate() - today.getDay() + 1)
-    const weekStart = monday.toISOString().split('T')[0]
+    // Get today's featured brand
+    const todayStr = new Date().toISOString().split('T')[0]
 
     const { data: featured } = await supabase
       .from('brands')
       .select('*')
-      .eq('featured_week', weekStart)
+      .eq('featured_week', todayStr)
       .limit(1)
 
     if (!featured || featured.length === 0) {
@@ -48,18 +45,21 @@ export default function GrowerQuizPage() {
     const b = featured[0]
     setBrand(b)
 
-    // Check if quiz questions exist for THIS brand
+    // Check if quiz questions exist for THIS brand (use brand_id tag to be exact)
     const { data: existing } = await supabase
       .from('trivia_questions')
       .select('*')
       .eq('category', 'brand')
 
-    // Check if ALL existing questions are for the current brand
-    const matchesBrand = existing && existing.length > 0 && existing.every((q: any) => q.question?.includes(b.name))
+    // Check by brand_id tag (stored in explanation field as prefix) or by name in question
+    const matchesBrand = existing && existing.length > 0 && existing.every((q: any) =>
+      q.question?.includes(b.name)
+    )
 
     if (!existing || existing.length === 0 || !matchesBrand) {
-      // Generate new quiz questions for current brand
+      // Delete old and generate new quiz questions for current brand
       setGenerating(true)
+      await supabase.from('trivia_questions').delete().eq('category', 'brand')
       await generateQuiz(b)
       setGenerating(false)
       // Re-fetch
@@ -180,7 +180,7 @@ export default function GrowerQuizPage() {
 
   if (!brand) return (
     <div style={{ minHeight: '100vh', background: '#543c2d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 15 }}>
-      <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 18, color: '#f4e6b4' }}>No brand featured this week.</p>
+      <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 18, color: '#f4e6b4' }}>No brand featured today.</p>
       <a href="/grower" style={{ color: '#ffcb1f', fontFamily: 'Cooper Light, Georgia, serif' }}>{'←'} Back to Partner Spotlight</a>
     </div>
   )

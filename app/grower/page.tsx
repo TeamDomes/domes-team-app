@@ -36,15 +36,12 @@ export default function GrowerPage() {
       .order('name')
     setAllBrands(brandsData || [])
 
-    const today = new Date()
-    const monday = new Date(today)
-    monday.setDate(today.getDate() - today.getDay() + 1)
-    const weekStart = monday.toISOString().split('T')[0]
+    const todayStr = new Date().toISOString().split('T')[0]
 
     const { data: featured } = await supabase
       .from('brands')
       .select('*')
-      .eq('featured_week', weekStart)
+      .eq('featured_week', todayStr)
       .limit(1)
 
     if (featured && featured.length > 0) {
@@ -61,7 +58,7 @@ export default function GrowerPage() {
       if (unshown && unshown.length > 0) {
         const { data: updated } = await supabase
           .from('brands')
-          .update({ featured_week: weekStart })
+          .update({ featured_week: todayStr })
           .eq('id', unshown[0].id)
           .select()
           .single()
@@ -76,7 +73,7 @@ export default function GrowerPage() {
         if (anyBrand && anyBrand.length > 0) {
           const { data: updated } = await supabase
             .from('brands')
-            .update({ featured_week: weekStart })
+            .update({ featured_week: todayStr })
             .eq('id', anyBrand[0].id)
             .select()
             .single()
@@ -98,22 +95,24 @@ export default function GrowerPage() {
 
   async function adminSetBrand() {
     if (!selectedBrandId) return
-    const today = new Date()
-    const monday = new Date(today)
-    monday.setDate(today.getDate() - today.getDay() + 1)
-    const weekStart = monday.toISOString().split('T')[0]
+    const todayStr = new Date().toISOString().split('T')[0]
 
+    // Clear today's current featured brand
     await supabase
       .from('brands')
       .update({ featured_week: null })
-      .eq('featured_week', weekStart)
+      .eq('featured_week', todayStr)
 
+    // Set new brand as today's featured
     const { data: updated } = await supabase
       .from('brands')
-      .update({ featured_week: weekStart })
+      .update({ featured_week: todayStr })
       .eq('id', selectedBrandId)
       .select()
       .single()
+
+    // Delete old brand quiz so the new brand gets fresh questions
+    await supabase.from('trivia_questions').delete().eq('category', 'brand')
 
     if (updated) {
       setBrand(updated)
@@ -165,7 +164,7 @@ export default function GrowerPage() {
             border: '2px solid #543c2d'
           }}>
             <h3 style={{ fontFamily: 'Cooper Black, Georgia, serif', color: '#543c2d', margin: '0 0 10px' }}>
-              Pick This Week's Brand
+              Pick Today's Brand
             </h3>
             <select
               value={selectedBrandId}
@@ -195,7 +194,7 @@ export default function GrowerPage() {
                 cursor: 'pointer', width: '100%'
               }}
             >
-              Set as This Week's Brand
+              Set as Today's Brand
             </button>
           </div>
         )}
@@ -334,7 +333,7 @@ export default function GrowerPage() {
             <p style={{
               fontFamily: 'Cooper Light, Georgia, serif', fontSize: 16, color: '#543c2d'
             }}>
-              No brand featured this week yet. {isAdmin ? 'Use the Admin panel above to pick one!' : 'Check back soon!'}
+              No brand featured today yet. {isAdmin ? 'Use the Admin panel above to pick one!' : 'Check back soon!'}
             </p>
           </div>
         )}
