@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { awardPoints } from '@/lib/points'
 import * as XLSX from 'xlsx'
 
 const BIG_BASKET_THRESHOLD = 250
@@ -540,6 +541,88 @@ export default function StatsImportPage() {
         imported++
       }
 
+      // ── Auto-mark BINGO squares from uploaded data ──
+      const bingoUpdates: string[] = []
+      const { data: activeCycle } = await supabase.from('bingo_cycles').select('id').eq('status', 'Active').single()
+      if (activeCycle) {
+        const { data: bingoSquares } = await supabase
+          .from('bingo_squares')
+          .select('*, team!inner(id, full_name, role, type)')
+          .eq('cycle_id', activeCycle.id)
+
+        const budtenderSquares = (bingoSquares || []).filter((s: any) => s.team?.role === 'Budtender')
+
+        const squarePointsMap: Record<string, { points: number; activity: string }> = {
+          square_b: { points: 15, activity: 'bingo_square' },
+          square_i: { points: 15, activity: 'bingo_square' },
+          square_n: { points: 10, activity: 'bingo_on_time' },
+          square_g: { points: 25, activity: 'bingo_drawer' },
+        }
+
+        for (const bs of budtenderSquares) {
+          const mid = bs.team_member_id
+          const updates: Record<string, boolean> = {}
+
+          // G — Got Here On Time: no late clock-ins
+          if (mid in onTimeData && onTimeData[mid] === true && !bs.square_g) {
+            updates.square_g = true
+          }
+
+          // N — Near-Perfect Drawer: all variances ≤ $0.50
+          if (mid in drawerResults && drawerResults[mid].pass === true && !bs.square_n) {
+            updates.square_n = true
+          }
+
+          // B — Big Basket: 4+ over $250 (PT: 3+)
+          if (mid in bigBasketData) {
+            const need = bs.team?.type === 'PT' ? 3 : 4
+            if (bigBasketData[mid] >= need && !bs.square_b) {
+              updates.square_b = true
+            }
+          }
+
+          // I — In the Upsell: ≥ 10% upsell rate
+          if (mid in upsellData) {
+            const { transactions, upsellTx } = upsellData[mid]
+            const rate = transactions > 0 ? (upsellTx / transactions) * 100 : 0
+            if (rate >= 10 && !bs.square_i) {
+              updates.square_i = true
+            }
+          }
+
+          if (Object.keys(updates).length > 0) {
+            // Count total filled squares after updates
+            let filled = 0
+            for (const sq of ['square_b', 'square_i', 'square_n', 'square_g', 'square_o']) {
+              if (updates[sq] || bs[sq]) filled++
+            }
+            updates.squares_filled = filled as any
+            if (filled === 5) updates.has_bingo = true as any
+
+            await supabase.from('bingo_squares').update(updates).eq('id', bs.id)
+
+            // Award points for newly checked squares
+            for (const [sq, passed] of Object.entries(updates)) {
+              if (sq.startsWith('square_') && passed === true) {
+                const config = squarePointsMap[sq]
+                if (config && config.points > 0) {
+                  const sourceId = `bingo_${sq}_${mid}_${activeCycle.id}`
+                  await awardPoints(mid, config.points, config.activity, sourceId)
+                }
+              }
+            }
+
+            // Award BINGO win if they just completed all 5
+            if (filled === 5 && !bs.has_bingo) {
+              const sourceId = `bingo_win_${mid}_${activeCycle.id}`
+              await awardPoints(mid, 1500, 'bingo_win', sourceId)
+            }
+
+            bingoUpdates.push(bs.team?.full_name || mid)
+          }
+        }
+      }
+
       // Build friendly name list for result
       const nameList = [...allMemberIds].map(id => {
         const m = team.find((t: any) => t.id === id)
@@ -549,6 +632,7 @@ export default function StatsImportPage() {
       setResult({
         imported,
         members: nameList,
+        bingoUpdates,
         extras: {
           attendance: Object.keys(onTimeData).length > 0,
           cashRecon: Object.keys(drawerResults).length > 0,
@@ -708,6 +792,11 @@ export default function StatsImportPage() {
                   {result.extras.attendance ? ' attendance' : ''}
                   {result.extras.cashRecon ? ' drawer-data' : ''}
                   {result.extras.bigBaskets ? ' big-baskets' : ''}
+                </p>
+              )}
+              {result.bingoUpdates && result.bingoUpdates.length > 0 && (
+                <p style={{ margin: '8px 0 0', fontSize: 13, color: '#f37029', fontWeight: 'bold' }}>
+                  BINGO squares auto-updated for: {result.bingoUpdates.join(', ')}
                 </p>
               )}
             </div>
