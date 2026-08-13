@@ -12,10 +12,40 @@ async function getStaffNames(): Promise<string[]> {
   return (data || []).map((t: any) => t.full_name.split(' ')[0])
 }
 
+// Levenshtein distance for fuzzy name matching
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length
+  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) => {
+    const row = new Array(n + 1).fill(0)
+    row[0] = i
+    return row
+  })
+  for (let j = 1; j <= n; j++) dp[0][j] = j
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+    }
+  }
+  return dp[m][n]
+}
+
 function detectStaff(text: string, staffNames: string[]): string[] {
   if (!text) return []
   const lower = text.toLowerCase()
-  return staffNames.filter(name => name.length >= 3 && lower.includes(name.toLowerCase()))
+  // Extract words from the review text
+  const words = lower.match(/[a-z]+/g) || []
+  return staffNames.filter(name => {
+    if (name.length < 3) return false
+    const nameLow = name.toLowerCase()
+    // Exact substring match first
+    if (lower.includes(nameLow)) return true
+    // Fuzzy: check each word in the review for close matches (handles Jerrome→Jerome, etc.)
+    // Allow distance of 1 for names 3-5 chars, distance of 2 for names 6+ chars
+    const maxDist = nameLow.length >= 6 ? 2 : 1
+    return words.some(w => Math.abs(w.length - nameLow.length) <= maxDist && levenshtein(w, nameLow) <= maxDist)
+  })
 }
 
 /* POST — receive a review from Zapier */
