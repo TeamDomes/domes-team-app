@@ -31,8 +31,18 @@ export default function StaffReviews() {
     const { data: m } = await supabase.from('team').select('*').eq('email', user.email).single()
     setMember(m)
 
-    const { data: prods } = await supabase.from('products').select('*').eq('is_active', true).order('name')
-    setProducts(prods || [])
+    // Fetch all active products (Supabase defaults to 1000 row limit)
+    let allProds: any[] = []
+    let from = 0
+    const pageSize = 1000
+    while (true) {
+      const { data: batch } = await supabase.from('products').select('*').eq('is_active', true).order('name').range(from, from + pageSize - 1)
+      if (!batch || batch.length === 0) break
+      allProds = allProds.concat(batch)
+      if (batch.length < pageSize) break
+      from += pageSize
+    }
+    setProducts(allProds)
 
     const { data: revs } = await supabase
       .from('staff_reviews')
