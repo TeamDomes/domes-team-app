@@ -380,7 +380,7 @@ export default function Dashboard() {
           }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
               <span style={{ fontSize: 34, fontFamily: 'Cooper Black, serif', color: '#3a7b3c', letterSpacing: -1 }}>{totalPoints}</span>
-              <span style={{ fontSize: 13, color: '#543c2d' }}>points</span>
+              <a href="/points-guide" style={{ fontSize: 13, color: '#543c2d', textDecoration: 'none', borderBottom: '1px dashed #543c2d' }}>points</a>
               <span style={{ fontSize: 11, color: '#888', marginLeft: 4 }}>+{weekPoints} this week</span>
             </div>
             <div style={{ textAlign: 'right' }}>
