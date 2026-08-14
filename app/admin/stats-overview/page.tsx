@@ -10,6 +10,7 @@ export default function StatsOverviewPage() {
   const [teamMap, setTeamMap] = useState<Record<string, any>>({})
   const [selectedWeek, setSelectedWeek] = useState<string>('')
   const [weeks, setWeeks] = useState<string[]>([])
+  const [allReviews, setAllReviews] = useState<any[]>([])
 
   useEffect(() => { loadData() }, [])
 
@@ -34,6 +35,12 @@ export default function StatsOverviewPage() {
       .order('week_ending', { ascending: false })
     setStats(allStats || [])
 
+    // Load Google reviews for Review column
+    const { data: reviews } = await supabase
+      .from('google_reviews')
+      .select('mentioned_staff, review_date')
+    setAllReviews(reviews || [])
+
     const uniqueWeeks = [...new Set((allStats || []).map((s: any) => s.week_ending))].sort().reverse()
     setWeeks(uniqueWeeks)
     if (uniqueWeeks.length > 0) setSelectedWeek(uniqueWeeks[0])
@@ -56,6 +63,25 @@ export default function StatsOverviewPage() {
   const weekStats = stats.filter(s => s.week_ending === selectedWeek)
     .sort((a, b) => Number(b.total_net_sales) - Number(a.total_net_sales))
 
+  // Build review counts per team member (this week + all-time)
+  function getReviewCounts(memberId: string) {
+    const memberName = teamMap[memberId]?.full_name?.split(' ')[0]?.toLowerCase()
+    if (!memberName) return { week: 0, total: 0 }
+    let week = 0, total = 0
+    const weekEnd = selectedWeek ? new Date(selectedWeek + 'T23:59:59') : null
+    const weekStart = weekEnd ? new Date(weekEnd.getTime() - 6 * 24 * 60 * 60 * 1000) : null
+    allReviews.forEach((r: any) => {
+      const mentioned = (r.mentioned_staff || []).some((n: string) => n.toLowerCase() === memberName)
+      if (!mentioned) return
+      total++
+      if (weekStart && weekEnd && r.review_date) {
+        const rd = new Date(r.review_date)
+        if (rd >= weekStart && rd <= weekEnd) week++
+      }
+    })
+    return { week, total }
+  }
+
   const formatDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString()
 
   return (
@@ -71,9 +97,11 @@ export default function StatsOverviewPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <a href="/admin/stats-alltime" style={{ color: '#f37029', textDecoration: 'none', fontSize: 13, fontWeight: 'bold' }}>{'🏆'} All-Time</a>
+            <span style={{ color: '#ccc' }}>|</span>
             <a href="/admin/stats" style={{ color: '#387dac', textDecoration: 'none', fontSize: 13 }}>Import Stats</a>
             <span style={{ color: '#ccc' }}>|</span>
-            <a href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 13 }}>{'<-'} Dashboard</a>
+            <a href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 13 }}>{'←'} Dashboard</a>
           </div>
         </div>
 
@@ -192,7 +220,17 @@ export default function StatsOverviewPage() {
                             : '—'}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                          {s.got_named_in_review ? <span>{'⭐'}</span> : <span style={{ color: '#ccc' }}>{'—'}</span>}
+                          {(() => {
+                            const rc = getReviewCounts(s.team_member_id)
+                            if (rc.total === 0) return <span style={{ color: '#ccc' }}>{'—'}</span>
+                            return (
+                              <span style={{ fontSize: 12 }}>
+                                <span style={{ color: '#f37029', fontWeight: 'bold' }}>{rc.week > 0 ? `${rc.week} this wk` : '—'}</span>
+                                <br />
+                                <span style={{ color: '#3a7b3c' }}>{rc.total} total</span>
+                              </span>
+                            )
+                          })()}
                         </td>
                       </tr>
                     )
