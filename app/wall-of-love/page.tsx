@@ -85,12 +85,42 @@ export default function WallOfLovePage() {
       return
     }
 
-    // Award points to mentioned staff
+    // Award points + mark BINGO O square for mentioned staff
     if (mentioned.length > 0 && newReview.rating >= 4) {
+      // Find active BINGO cycle
+      const { data: activeCycle } = await supabase
+        .from('bingo_cycles')
+        .select('id')
+        .eq('status', 'Active')
+        .limit(1)
+
       for (const name of mentioned) {
         const match = team.find((t: any) => t.full_name.split(' ')[0].toLowerCase() === name.toLowerCase())
         if (match) {
           await awardPoints(match.id, 250, 'google_review_mention', newReview.customer_name)
+
+          // Mark BINGO O square
+          if (activeCycle && activeCycle.length > 0) {
+            const cycleId = activeCycle[0].id
+            const { data: sq } = await supabase
+              .from('bingo_squares')
+              .select('*')
+              .eq('team_member_id', match.id)
+              .eq('cycle_id', cycleId)
+              .single()
+
+            if (sq && !sq.square_o) {
+              await supabase
+                .from('bingo_squares')
+                .update({ square_o: true })
+                .eq('id', sq.id)
+
+              // Check for BINGO (all 5 squares)
+              if (sq.square_b && sq.square_i && sq.square_n && sq.square_g) {
+                await awardPoints(match.id, 1500, 'bingo_win', `cycle_${cycleId}_review`)
+              }
+            }
+          }
         }
       }
     }

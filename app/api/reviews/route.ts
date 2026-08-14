@@ -80,20 +80,58 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: 'error', message: error.message }, { status: 400 })
     }
 
-    // Award points to mentioned staff (15 pts for 4+ star reviews)
+    // Award points + mark BINGO O square for mentioned staff (4+ star reviews)
     if (mentioned.length > 0 && rating >= 4) {
       const { data: teamData } = await supabase.from('team').select('id, full_name')
+
+      // Find active BINGO cycle
+      const { data: activeCycle } = await supabase
+        .from('bingo_cycles')
+        .select('id')
+        .eq('status', 'Active')
+        .limit(1)
+
       for (const name of mentioned) {
         const match = (teamData || []).find((t: any) =>
           t.full_name.split(' ')[0].toLowerCase() === name.toLowerCase()
         )
         if (match) {
+          // Award 250 points
           await supabase.from('points_log').insert({
             team_member_id: match.id,
             points: 250,
             activity: 'google_review_mention',
             source_id: customerName,
           })
+
+          // Mark BINGO O square if cycle is active
+          if (activeCycle && activeCycle.length > 0) {
+            const cycleId = activeCycle[0].id
+            const { data: sq } = await supabase
+              .from('bingo_squares')
+              .select('*')
+              .eq('team_member_id', match.id)
+              .eq('cycle_id', cycleId)
+              .single()
+
+            if (sq && !sq.square_o) {
+              await supabase
+                .from('bingo_squares')
+                .update({ square_o: true })
+                .eq('id', sq.id)
+
+              // Check if BINGO is complete (all 5 squares)
+              if (sq.square_b && sq.square_i && sq.square_n && sq.square_g) {
+                // All other squares were already true + O is now true = BINGO!
+                await supabase.from('points_log').insert({
+                  team_member_id: match.id,
+                  points: 1500,
+                  activity: 'bingo_win',
+                  source_id: `cycle_${cycleId}_review`,
+                })
+              }
+            }
+          }
         }
       }
     }
