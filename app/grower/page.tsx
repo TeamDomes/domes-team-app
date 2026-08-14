@@ -306,6 +306,32 @@ export default function GrowerPage() {
                 </div>
               )}
 
+              {/* Source Link */}
+              {brand.source_url && (
+                <div style={{
+                  background: '#f0f7f0', borderRadius: 10, padding: 12, marginTop: 15,
+                  textAlign: 'center', borderLeft: '4px solid #3a7b3c'
+                }}>
+                  <a
+                    href={brand.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontFamily: 'Cooper Light, Georgia, serif', fontSize: 13,
+                      color: '#3a7b3c', textDecoration: 'underline'
+                    }}
+                  >
+                    {'🔗'} Learn more at {brand.source_url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                  </a>
+                  <p style={{
+                    fontFamily: 'Cooper Light, Georgia, serif', fontSize: 11,
+                    color: '#888', margin: '4px 0 0'
+                  }}>
+                    Source verified from official brand website
+                  </p>
+                </div>
+              )}
+
               {/* Take the Quiz Button */}
               {brand.talking_points && brand.talking_points.length > 0 && (
                 <div style={{ textAlign: 'center', marginTop: 25 }}>
