@@ -45,7 +45,8 @@ export default function StaffReviews() {
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort()]
 
   const filteredProducts = products.filter(p => {
-    const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const q = searchQuery.toLowerCase()
+    const matchesSearch = !searchQuery || p.name.toLowerCase().includes(q) || (p.brand && p.brand.toLowerCase().includes(q))
     const matchesCat = filterCategory === 'all' || p.category === filterCategory
     return matchesSearch && matchesCat
   })

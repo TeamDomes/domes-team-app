@@ -43,6 +43,98 @@ async function fetchDutchieInventory(): Promise<any[]> {
   }
 }
 
+/**
+ * Normalize Dutchie category using the raw category + product name keywords.
+ * Fixes common issues like prerolls tagged as "Flower".
+ */
+function normalizeCategory(rawCategory: string, productName: string): string {
+  const cat = rawCategory.toLowerCase().trim()
+  const name = productName.toLowerCase()
+
+  // Name-based detection takes priority — catches miscategorized items
+  const prerollKeywords = ['preroll', 'pre-roll', 'pre roll', 'joint', 'blunt', 'infused roll', 'dog walker', 'mini roll', 'cannagar', 'moon rock roll', 'slugger']
+  if (prerollKeywords.some(kw => name.includes(kw))) return 'Pre-Rolls'
+
+  const concentrateKeywords = ['concentrate', 'wax', 'shatter', 'rosin', 'resin', 'badder', 'budder', 'crumble', 'sauce', 'diamond', 'sugar', 'hash', 'kief', 'dab', 'extract']
+  if (concentrateKeywords.some(kw => name.includes(kw))) return 'Concentrates'
+
+  const vapeKeywords = ['vape', 'cartridge', 'cart ', 'pod', '510', 'disposable vape', 'pax pod']
+  if (vapeKeywords.some(kw => name.includes(kw))) return 'Vaporizers'
+
+  const edibleKeywords = ['gummy', 'gummies', 'chocolate', 'edible', 'candy', 'cookie', 'brownie', 'lozenge', 'chew', 'caramel', 'mint ', 'mints']
+  if (edibleKeywords.some(kw => name.includes(kw))) return 'Edibles'
+
+  const beverageKeywords = ['beverage', 'drink', 'soda', 'tea ', 'coffee', 'elixir', 'shot ', 'tonic', 'sparkling', 'seltzer']
+  if (beverageKeywords.some(kw => name.includes(kw))) return 'Beverages'
+
+  const tincKeywords = ['tincture', 'oil ', 'drops', 'sublingual', 'rso', 'capsule']
+  if (tincKeywords.some(kw => name.includes(kw))) return 'Tinctures'
+
+  const topicalKeywords = ['topical', 'balm', 'cream', 'lotion', 'salve', 'patch', 'transdermal', 'bath bomb', 'roll-on']
+  if (topicalKeywords.some(kw => name.includes(kw))) return 'Topicals'
+
+  const accessoryKeywords = ['accessory', 'accessories', 'grinder', 'pipe', 'papers', 'lighter', 'tray', 'stash', 'jar ', 'container']
+  if (accessoryKeywords.some(kw => name.includes(kw))) return 'Accessories'
+
+  // Category-string normalization for Dutchie's various category names
+  const categoryMap: Record<string, string> = {
+    'flower': 'Flower',
+    'flowers': 'Flower',
+    'buds': 'Flower',
+    'pre-roll': 'Pre-Rolls',
+    'pre-rolls': 'Pre-Rolls',
+    'preroll': 'Pre-Rolls',
+    'prerolls': 'Pre-Rolls',
+    'pre roll': 'Pre-Rolls',
+    'pre rolls': 'Pre-Rolls',
+    'joints': 'Pre-Rolls',
+    'concentrate': 'Concentrates',
+    'concentrates': 'Concentrates',
+    'extracts': 'Concentrates',
+    'extract': 'Concentrates',
+    'vaporizer': 'Vaporizers',
+    'vaporizers': 'Vaporizers',
+    'vape': 'Vaporizers',
+    'vapes': 'Vaporizers',
+    'cartridge': 'Vaporizers',
+    'cartridges': 'Vaporizers',
+    'edible': 'Edibles',
+    'edibles': 'Edibles',
+    'food': 'Edibles',
+    'beverage': 'Beverages',
+    'beverages': 'Beverages',
+    'drinks': 'Beverages',
+    'tincture': 'Tinctures',
+    'tinctures': 'Tinctures',
+    'oils': 'Tinctures',
+    'capsules': 'Tinctures',
+    'topical': 'Topicals',
+    'topicals': 'Topicals',
+    'accessory': 'Accessories',
+    'accessories': 'Accessories',
+    'gear': 'Accessories',
+    'merch': 'Accessories',
+    'merchandise': 'Accessories',
+    'accesories': 'Accessories',
+    'vapor': 'Vaporizers',
+    'pet products': 'Pet Products',
+  }
+
+  if (categoryMap[cat]) return categoryMap[cat]
+
+  // Partial match on category string
+  if (cat.includes('pre-roll') || cat.includes('preroll')) return 'Pre-Rolls'
+  if (cat.includes('concentrate') || cat.includes('extract')) return 'Concentrates'
+  if (cat.includes('vape') || cat.includes('cartridge')) return 'Vaporizers'
+  if (cat.includes('edible')) return 'Edibles'
+  if (cat.includes('beverage') || cat.includes('drink')) return 'Beverages'
+  if (cat.includes('tincture') || cat.includes('capsule')) return 'Tinctures'
+  if (cat.includes('topical')) return 'Topicals'
+
+  // Return original with title case if no match
+  return rawCategory || 'Uncategorized'
+}
+
 export async function POST(req: Request) {
   try {
     // Optional: verify cron secret for scheduled calls
@@ -87,7 +179,8 @@ export async function POST(req: Request) {
       // Dutchie product fields vary — handle common shapes
       const name = dp.name || dp.productName || ''
       const brand = dp.brand || dp.brandName || (name.includes('|') ? name.split('|')[0].trim() : '')
-      const category = dp.category || dp.productCategory || dp.masterCategory || ''
+      // Prefer most specific category field from Dutchie
+      const rawCategory = dp.subcategory || dp.subCategory || dp.productCategory || dp.category || dp.masterCategory || ''
       const dutchieId = String(dp.id || dp.productId || '')
 
       if (!name) continue
@@ -95,6 +188,9 @@ export async function POST(req: Request) {
 
       // Build the product name in "Brand | Product" format if not already
       const productName = name.includes('|') ? name : (brand ? `${brand} | ${name}` : name)
+
+      // Normalize category — fix common Dutchie miscategorizations
+      const category = normalizeCategory(rawCategory, productName)
 
       // Check inventory
       const qty = inventoryMap.get(dutchieId)
