@@ -28,52 +28,20 @@ export default function GrowerQuizPage() {
     })
     setCurrentUser(me)
 
-    // Get today's featured brand
-    const todayStr = new Date().toISOString().split('T')[0]
-
-    const { data: featured } = await supabase
-      .from('brands')
-      .select('*')
-      .eq('featured_week', todayStr)
-      .limit(1)
-
-    if (!featured || featured.length === 0) {
-      setLoading(false)
-      return
+    // Fetch quiz from server API (handles generation with service role key)
+    setGenerating(true)
+    try {
+      const res = await fetch('/api/grower/quiz')
+      const data = await res.json()
+      if (data.brand) {
+        setBrand(data.brand)
+        setQuiz(data.quiz || [])
+        await checkExistingAnswers(data.quiz || [], me?.id)
+      }
+    } catch (err) {
+      console.error('Failed to load quiz:', err)
     }
-
-    const b = featured[0]
-    setBrand(b)
-
-    // Check if quiz questions exist for THIS brand (use brand_id tag to be exact)
-    const { data: existing } = await supabase
-      .from('trivia_questions')
-      .select('*')
-      .eq('category', 'brand')
-
-    // Check by brand_id tag (stored in explanation field as prefix) or by name in question
-    const matchesBrand = existing && existing.length > 0 && existing.every((q: any) =>
-      q.question?.includes(b.name)
-    )
-
-    if (!existing || existing.length === 0 || !matchesBrand) {
-      // Delete old and generate new quiz questions for current brand
-      setGenerating(true)
-      await supabase.from('trivia_questions').delete().eq('category', 'brand')
-      await generateQuiz(b)
-      setGenerating(false)
-      // Re-fetch
-      const { data: freshQuiz } = await supabase
-        .from('trivia_questions')
-        .select('*')
-        .eq('category', 'brand')
-      setQuiz(freshQuiz || [])
-      await checkExistingAnswers(freshQuiz || [], me?.id)
-    } else {
-      setQuiz(existing)
-      await checkExistingAnswers(existing, me?.id)
-    }
-
+    setGenerating(false)
     setLoading(false)
   }
 
@@ -95,56 +63,6 @@ export default function GrowerQuizPage() {
       setAnswers(ansMap)
       setScore(correct)
       setSubmitted(true)
-    }
-  }
-
-  async function generateQuiz(b: any) {
-    if (!b.talking_points || b.talking_points.length === 0) return
-
-    const wrongLocations = ['Denver, CO', 'Portland, ME', 'Austin, TX', 'Seattle, WA', 'Miami, FL', 'Chicago, IL', 'Boston, MA', 'Trenton, NJ']
-    const wrongProducts = ['Rolling papers only', 'CBD pet treats only', 'Cannabis-infused candles', 'Hemp clothing', 'THC patches only']
-    const wrongKnown = ['Budget-priced accessories', 'Cannabis-infused skincare', 'Fast food partnerships', 'Celebrity endorsements only', 'Wholesale only']
-
-    // Delete any old brand quiz questions
-    await supabase.from('trivia_questions').delete().eq('category', 'brand')
-
-    if (b.location) {
-      const shuffled = wrongLocations.filter(l => l !== b.location).sort(() => Math.random() - 0.5)
-      await supabase.from('trivia_questions').insert({
-        question: 'Where is ' + b.name + ' located?',
-        option_a: b.location,
-        option_b: shuffled[0],
-        option_c: shuffled[1],
-        correct_answer: 'A',
-        explanation: b.name + ' is based in ' + b.location + '.',
-        category: 'brand'
-      })
-    }
-
-    if (b.known_for) {
-      const shuffled = wrongKnown.sort(() => Math.random() - 0.5)
-      await supabase.from('trivia_questions').insert({
-        question: 'What is ' + b.name + ' best known for?',
-        option_a: b.known_for,
-        option_b: shuffled[0],
-        option_c: shuffled[1],
-        correct_answer: 'A',
-        explanation: b.name + ' is known for: ' + b.known_for,
-        category: 'brand'
-      })
-    }
-
-    if (b.product_types) {
-      const shuffled = wrongProducts.sort(() => Math.random() - 0.5)
-      await supabase.from('trivia_questions').insert({
-        question: 'What type of products does ' + b.name + ' make?',
-        option_a: b.product_types,
-        option_b: shuffled[0],
-        option_c: shuffled[1],
-        correct_answer: 'A',
-        explanation: b.name + ' produces: ' + b.product_types,
-        category: 'brand'
-      })
     }
   }
 
