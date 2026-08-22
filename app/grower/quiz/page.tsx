@@ -1,10 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { awardPoints, POINTS } from '@/lib/points'
 
 export default function GrowerQuizPage() {
+  const searchParams = useSearchParams()
+  const brandId = searchParams.get('brand')
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [brand, setBrand] = useState<any>(null)
   const [quiz, setQuiz] = useState<any[]>([])
@@ -14,7 +17,7 @@ export default function GrowerQuizPage() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { loadData() }, [brandId])
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -31,7 +34,7 @@ export default function GrowerQuizPage() {
     // Fetch quiz from server API (handles generation with service role key)
     setGenerating(true)
     try {
-      const res = await fetch('/api/grower/quiz')
+      const res = await fetch('/api/grower/quiz' + (brandId ? `?brand=${brandId}` : ''))
       const data = await res.json()
       if (data.brand) {
         setBrand(data.brand)

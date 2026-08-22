@@ -336,7 +336,7 @@ export default function GrowerPage() {
               {brand.talking_points && brand.talking_points.length > 0 && (
                 <div style={{ textAlign: 'center', marginTop: 25 }}>
                   <a
-                    href="/grower/quiz"
+                    href={`/grower/quiz?brand=${brand.id}`}
                     style={{
                       display: 'inline-block', background: '#ffcb1f', color: '#543c2d',
                       border: 'none', borderRadius: 12, padding: '16px 40px',

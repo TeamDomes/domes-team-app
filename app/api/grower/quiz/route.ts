@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,30 +10,42 @@ const wrongLocations = ['Denver, CO', 'Portland, ME', 'Austin, TX', 'Seattle, WA
 const wrongProducts = ['Rolling papers only', 'CBD pet treats only', 'Cannabis-infused candles', 'Hemp clothing', 'THC patches only']
 const wrongKnown = ['Budget-priced accessories', 'Cannabis-infused skincare', 'Fast food partnerships', 'Celebrity endorsements only', 'Wholesale only']
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const todayStr = new Date().toISOString().split('T')[0]
+    const brandId = req.nextUrl.searchParams.get('brand')
 
-    // Get today's featured brand
-    const { data: featured } = await supabase
-      .from('brands')
-      .select('*')
-      .eq('featured_week', todayStr)
-      .limit(1)
+    let brand: any = null
 
-    if (!featured || featured.length === 0) {
+    if (brandId) {
+      // Load the specific brand being viewed
+      const { data } = await supabase
+        .from('brands')
+        .select('*')
+        .eq('id', brandId)
+        .single()
+      brand = data
+    } else {
+      // Fallback: most recently featured brand
+      const { data: recent } = await supabase
+        .from('brands')
+        .select('*')
+        .eq('is_active', true)
+        .not('featured_week', 'is', null)
+        .order('featured_week', { ascending: false })
+        .limit(1)
+      if (recent && recent.length > 0) brand = recent[0]
+    }
+
+    if (!brand) {
       return NextResponse.json({ brand: null, quiz: [] })
     }
 
-    const brand = featured[0]
-
-    // Get existing brand quiz questions
+    // Get existing quiz questions that match THIS brand
     const { data: existing } = await supabase
       .from('trivia_questions')
       .select('*')
       .eq('category', 'brand')
 
-    // Check if questions match the current brand
     const matchesBrand = existing && existing.length > 0 && existing.length <= 5 &&
       existing.every((q: any) => q.question?.includes(brand.name))
 
@@ -41,10 +53,9 @@ export async function GET() {
       return NextResponse.json({ brand, quiz: existing })
     }
 
-    // Delete ALL old brand questions (service role key bypasses RLS)
+    // Delete old brand questions and generate new ones for this brand
     await supabase.from('trivia_questions').delete().eq('category', 'brand')
 
-    // Generate new questions for this brand
     const newQuestions: any[] = []
 
     if (brand.location) {
@@ -61,7 +72,7 @@ export async function GET() {
     }
 
     if (brand.known_for) {
-      const shuffled = wrongKnown.sort(() => Math.random() - 0.5)
+      const shuffled = [...wrongKnown].sort(() => Math.random() - 0.5)
       newQuestions.push({
         question: 'What is ' + brand.name + ' best known for?',
         option_a: brand.known_for,
@@ -74,7 +85,7 @@ export async function GET() {
     }
 
     if (brand.product_types) {
-      const shuffled = wrongProducts.sort(() => Math.random() - 0.5)
+      const shuffled = [...wrongProducts].sort(() => Math.random() - 0.5)
       newQuestions.push({
         question: 'What type of products does ' + brand.name + ' make?',
         option_a: brand.product_types,
@@ -90,7 +101,6 @@ export async function GET() {
       await supabase.from('trivia_questions').insert(newQuestions)
     }
 
-    // Fetch the freshly inserted questions
     const { data: freshQuiz } = await supabase
       .from('trivia_questions')
       .select('*')
