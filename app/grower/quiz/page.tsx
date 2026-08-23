@@ -1,11 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { awardPoints, POINTS } from '@/lib/points'
 
 export default function GrowerQuizPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#543c2d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 18, color: '#f4e6b4' }}>Loading...</p>
+      </div>
+    }>
+      <QuizContent />
+    </Suspense>
+  )
+}
+
+function QuizContent() {
   const searchParams = useSearchParams()
   const brandId = searchParams.get('brand')
   const [currentUser, setCurrentUser] = useState<any>(null)
