@@ -16,25 +16,17 @@ export async function GET(req: NextRequest) {
 
     let brand: any = null
 
-    if (brandId) {
-      // Load the specific brand being viewed
-      const { data } = await supabase
-        .from('brands')
-        .select('*')
-        .eq('id', brandId)
-        .single()
-      brand = data
-    } else {
-      // Fallback: most recently featured brand
-      const { data: recent } = await supabase
-        .from('brands')
-        .select('*')
-        .eq('is_active', true)
-        .not('featured_week', 'is', null)
-        .order('featured_week', { ascending: false })
-        .limit(1)
-      if (recent && recent.length > 0) brand = recent[0]
+    if (!brandId) {
+      return NextResponse.json({ brand: null, quiz: [] })
     }
+
+    // Load the specific brand being viewed
+    const { data } = await supabase
+      .from('brands')
+      .select('*')
+      .eq('id', brandId)
+      .single()
+    brand = data
 
     if (!brand) {
       return NextResponse.json({ brand: null, quiz: [] })

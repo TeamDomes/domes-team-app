@@ -17,7 +17,14 @@ export default function GrowerQuizPage() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
 
-  useEffect(() => { loadData() }, [brandId])
+  useEffect(() => {
+    if (!brandId) {
+      // No brand specified — send them to the grower page to pick one
+      window.location.href = '/grower'
+      return
+    }
+    loadData()
+  }, [brandId])
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
