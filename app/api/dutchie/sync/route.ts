@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 // Use service role key for server-side operations (bypasses RLS)
+const usingServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -305,6 +306,7 @@ export async function POST(req: Request) {
     const summary = {
       status: 'ok',
       dutchieProducts: dutchieProducts.length,
+      deduplicated: dedupedBatch.length,
       productsUpserted,
       upsertError,
       newOrReturningProducts: newOrReturning.length,
@@ -312,6 +314,9 @@ export async function POST(req: Request) {
       newBrands: newBrands.length,
       newBrandNames: newBrands,
       totalBrands: brandSet.size,
+      usingServiceKey,
+      existingBrandsFound: existingBrandNames.size,
+      existingProductsFound: existingMap.size,
       timestamp: new Date().toISOString(),
     }
 

@@ -297,6 +297,9 @@ export default function CatalogImportPage() {
                 Product sync error: {syncResult.upsertError}
               </p>
             )}
+            <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 12, color: '#666', margin: '4px 0' }}>
+              Debug: service key={syncResult.usingServiceKey ? 'yes' : 'no'}, existing brands found={syncResult.existingBrandsFound}, existing products found={syncResult.existingProductsFound}, deduped={syncResult.deduplicated}
+            </p>
             <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#3a7b3c', margin: '4px 0', fontWeight: 'bold' }}>
               New brands discovered: {syncResult.newBrands}
             </p>
