@@ -230,7 +230,17 @@ export async function POST(req: Request) {
       await supabase.from('brands').update({ is_active: true }).in('name', activeBrandNames)
     }
 
-    // 7. Upsert products in batches
+    // 7. Snapshot existing products BEFORE upsert (to detect new/returning items)
+    const { data: existingProducts } = await supabase
+      .from('products')
+      .select('name, is_active')
+      .eq('source', 'dutchie')
+    const existingMap = new Map<string, boolean>()
+    for (const p of (existingProducts || [])) {
+      existingMap.set(p.name, p.is_active)
+    }
+
+    // 8. Upsert products in batches
     let productsUpserted = 0
     for (let i = 0; i < productBatch.length; i += 200) {
       const batch = productBatch.slice(i, i + 200)
@@ -240,7 +250,26 @@ export async function POST(req: Request) {
       if (!error) productsUpserted += batch.length
     }
 
-    // 8. Mark products NOT in the Dutchie feed as inactive (they've been removed from menu)
+    // 9. Set menu_added_date for products that are NEW or were previously inactive
+    const todayDate = new Date().toISOString().split('T')[0]
+    const newOrReturning: string[] = []
+    for (const p of productBatch) {
+      const wasActive = existingMap.get(p.name)
+      if (wasActive === undefined || wasActive === false) {
+        // Product is new to the DB, or was inactive (removed from menu) and is now back
+        newOrReturning.push(p.name)
+      }
+    }
+    if (newOrReturning.length > 0) {
+      for (let i = 0; i < newOrReturning.length; i += 200) {
+        await supabase
+          .from('products')
+          .update({ menu_added_date: todayDate })
+          .in('name', newOrReturning.slice(i, i + 200))
+      }
+    }
+
+    // 10. Mark products NOT in the Dutchie feed as inactive (they've been removed from menu)
     const dutchieProductNames = new Set(productBatch.map(p => p.name))
     const { data: allProducts } = await supabase
       .from('products')
@@ -265,6 +294,7 @@ export async function POST(req: Request) {
       status: 'ok',
       dutchieProducts: dutchieProducts.length,
       productsUpserted,
+      newOrReturningProducts: newOrReturning.length,
       productsDeactivated: toDeactivate.length,
       newBrands: newBrands.length,
       newBrandNames: newBrands,

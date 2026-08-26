@@ -130,14 +130,14 @@ export default function Dashboard() {
   }
 
   async function loadNewProducts() {
-    // Find products added since the last sync (created_at in the last 7 days)
+    // Find products that appeared on the Dutchie menu in the last 7 days
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-    const cutoff = oneWeekAgo.toISOString()
+    const cutoff = oneWeekAgo.toISOString().split('T')[0]
     const { data: recentProducts } = await supabase
       .from('products')
       .select('id, name, brand, category')
-      .gte('created_at', cutoff)
+      .gte('menu_added_date', cutoff)
       .eq('is_active', true)
       .order('name')
       .limit(20)
