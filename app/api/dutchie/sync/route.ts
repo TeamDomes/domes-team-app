@@ -239,10 +239,10 @@ export async function POST(req: Request) {
     }
 
     // 7. Snapshot existing products BEFORE upsert (to detect new/returning items)
+    // Check ALL sources — products from catalog CSV imports count as existing
     const { data: existingProducts } = await supabase
       .from('products')
       .select('name, is_active')
-      .eq('source', 'dutchie')
     const existingMap = new Map<string, boolean>()
     for (const p of (existingProducts || [])) {
       existingMap.set(p.name, p.is_active)
