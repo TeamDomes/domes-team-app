@@ -206,6 +206,13 @@ export async function POST(req: Request) {
       })
     }
 
+    // Deduplicate by name (Dutchie can return duplicates, which breaks batch upsert)
+    const seen = new Map<string, any>()
+    for (const p of productBatch) {
+      seen.set(p.name, p)
+    }
+    const dedupedBatch = Array.from(seen.values())
+
     // 5. Insert new brands (with discovered_date)
     const newBrands: string[] = []
     brandSet.forEach(name => {
@@ -240,11 +247,11 @@ export async function POST(req: Request) {
       existingMap.set(p.name, p.is_active)
     }
 
-    // 8. Upsert products in batches
+    // 8. Upsert products in batches (using deduped list)
     let productsUpserted = 0
     let upsertError: string | null = null
-    for (let i = 0; i < productBatch.length; i += 200) {
-      const batch = productBatch.slice(i, i + 200)
+    for (let i = 0; i < dedupedBatch.length; i += 200) {
+      const batch = dedupedBatch.slice(i, i + 200)
       const { error } = await supabase.from('products').upsert(batch, {
         onConflict: 'name',
       })
@@ -258,7 +265,7 @@ export async function POST(req: Request) {
     // 9. Set menu_added_date for products that are NEW or were previously inactive
     const todayDate = new Date().toISOString().split('T')[0]
     const newOrReturning: string[] = []
-    for (const p of productBatch) {
+    for (const p of dedupedBatch) {
       const wasActive = existingMap.get(p.name)
       if (wasActive === undefined || wasActive === false) {
         // Product is new to the DB, or was inactive (removed from menu) and is now back
@@ -275,7 +282,7 @@ export async function POST(req: Request) {
     }
 
     // 10. Mark products NOT in the Dutchie feed as inactive (they've been removed from menu)
-    const dutchieProductNames = new Set(productBatch.map(p => p.name))
+    const dutchieProductNames = new Set(dedupedBatch.map(p => p.name))
     const { data: allProducts } = await supabase
       .from('products')
       .select('id, name')
