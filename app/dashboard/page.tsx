@@ -130,17 +130,18 @@ export default function Dashboard() {
   }
 
   async function loadNewProducts() {
-    // Find brands with a discovered_date in the last 14 days (set during catalog import)
-    const twoWeeksAgo = new Date()
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
-    const cutoff = twoWeeksAgo.toISOString().split('T')[0]
-    const { data: newBrands } = await supabase
-      .from('brands')
-      .select('id, name, description, known_for')
-      .gte('discovered_date', cutoff)
+    // Find products added since the last sync (created_at in the last 7 days)
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const cutoff = oneWeekAgo.toISOString()
+    const { data: recentProducts } = await supabase
+      .from('products')
+      .select('id, name, brand, category')
+      .gte('created_at', cutoff)
       .eq('is_active', true)
       .order('name')
-    setNewProducts(newBrands || [])
+      .limit(20)
+    setNewProducts(recentProducts || [])
   }
 
   async function checkQuestionnaire(memberId: string) {
@@ -465,33 +466,24 @@ export default function Dashboard() {
                 </p>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {newProducts.map((b: any) => (
-                  <a
-                    key={b.id}
-                    href={`/brand/${b.id}`}
-                    className="tile-hover"
+                {newProducts.map((p: any) => (
+                  <div
+                    key={p.id}
                     style={{
                       background: '#fff', borderRadius: 12, padding: '14px 18px',
-                      textDecoration: 'none', display: 'flex', flexDirection: 'column',
+                      display: 'flex', flexDirection: 'column',
                       gap: 4, border: '1px solid rgba(84,60,45,0.1)',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
                       flex: '1 1 calc(50% - 10px)', minWidth: 150,
                     }}
                   >
                     <span style={{
-                      fontFamily: 'Cooper Black, serif', fontSize: 15, color: '#543c2d',
-                    }}>{'🌿'} {b.name}</span>
-                    {b.known_for && (
-                      <span style={{
-                        fontFamily: 'Cooper Light, serif', fontSize: 12, color: '#3a7b3c',
-                      }}>{b.known_for}</span>
-                    )}
-                    {!b.known_for && (
-                      <span style={{
-                        fontFamily: 'Cooper Light, serif', fontSize: 12, color: '#888',
-                      }}>New brand — info coming soon</span>
-                    )}
-                  </a>
+                      fontFamily: 'Cooper Black, serif', fontSize: 14, color: '#543c2d',
+                    }}>{'🌿'} {p.name}</span>
+                    <span style={{
+                      fontFamily: 'Cooper Light, serif', fontSize: 12, color: '#3a7b3c',
+                    }}>{p.category || 'Uncategorized'}{p.brand ? ` · ${p.brand}` : ''}</span>
+                  </div>
                 ))}
               </div>
             </div>
