@@ -242,12 +242,17 @@ export async function POST(req: Request) {
 
     // 8. Upsert products in batches
     let productsUpserted = 0
+    let upsertError: string | null = null
     for (let i = 0; i < productBatch.length; i += 200) {
       const batch = productBatch.slice(i, i + 200)
       const { error } = await supabase.from('products').upsert(batch, {
         onConflict: 'name',
       })
-      if (!error) productsUpserted += batch.length
+      if (error) {
+        upsertError = error.message
+      } else {
+        productsUpserted += batch.length
+      }
     }
 
     // 9. Set menu_added_date for products that are NEW or were previously inactive
@@ -294,6 +299,7 @@ export async function POST(req: Request) {
       status: 'ok',
       dutchieProducts: dutchieProducts.length,
       productsUpserted,
+      upsertError,
       newOrReturningProducts: newOrReturning.length,
       productsDeactivated: toDeactivate.length,
       newBrands: newBrands.length,

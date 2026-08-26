@@ -292,6 +292,11 @@ export default function CatalogImportPage() {
             <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#333', margin: '4px 0' }}>
               Products deactivated (removed from menu): {syncResult.productsDeactivated}
             </p>
+            {syncResult.upsertError && (
+              <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#d32f2f', margin: '4px 0', fontWeight: 'bold' }}>
+                Product sync error: {syncResult.upsertError}
+              </p>
+            )}
             <p style={{ fontFamily: 'Cooper Light, Georgia, serif', fontSize: 14, color: '#3a7b3c', margin: '4px 0', fontWeight: 'bold' }}>
               New brands discovered: {syncResult.newBrands}
             </p>
