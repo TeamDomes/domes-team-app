@@ -140,7 +140,7 @@ export default function Dashboard() {
       .gte('menu_added_date', cutoff)
       .eq('is_active', true)
       .order('name')
-      .limit(20)
+      .limit(50)
     setNewProducts(recentProducts || [])
   }
 
