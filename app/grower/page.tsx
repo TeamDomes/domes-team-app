@@ -47,6 +47,7 @@ export default function GrowerPage() {
     if (featured && featured.length > 0) {
       setBrand(featured[0])
     } else {
+      // Priority 1: Brand with talking points that hasn't been featured yet
       const { data: unshown } = await supabase
         .from('brands')
         .select('*')
@@ -64,20 +65,40 @@ export default function GrowerPage() {
           .single()
         setBrand(updated || unshown[0])
       } else {
-        const { data: anyBrand } = await supabase
+        // Priority 2: Cycle back — pick the brand with talking points featured longest ago
+        const { data: oldest } = await supabase
           .from('brands')
           .select('*')
           .eq('is_active', true)
-          .is('featured_week', null)
+          .not('talking_points', 'is', null)
+          .order('featured_week', { ascending: true })
           .limit(1)
-        if (anyBrand && anyBrand.length > 0) {
+
+        if (oldest && oldest.length > 0) {
           const { data: updated } = await supabase
             .from('brands')
             .update({ featured_week: todayStr })
-            .eq('id', anyBrand[0].id)
+            .eq('id', oldest[0].id)
             .select()
             .single()
-          setBrand(updated || anyBrand[0])
+          setBrand(updated || oldest[0])
+        } else {
+          // Priority 3: Any active brand at all
+          const { data: anyBrand } = await supabase
+            .from('brands')
+            .select('*')
+            .eq('is_active', true)
+            .is('featured_week', null)
+            .limit(1)
+          if (anyBrand && anyBrand.length > 0) {
+            const { data: updated } = await supabase
+              .from('brands')
+              .update({ featured_week: todayStr })
+              .eq('id', anyBrand[0].id)
+              .select()
+              .single()
+            setBrand(updated || anyBrand[0])
+          }
         }
       }
     }
