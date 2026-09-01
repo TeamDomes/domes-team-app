@@ -10,7 +10,7 @@ export default function AppreciationsPage() {
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [showForm, setShowForm] = useState(false)
-  const [toId, setToId] = useState('')
+  const [toIds, setToIds] = useState<string[]>([])
   const [selectedThemeId, setSelectedThemeId] = useState('')
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
@@ -36,15 +36,20 @@ export default function AppreciationsPage() {
     setLoading(false)
   }
   useEffect(() => { load() }, [router])
+  function toggleRecipient(id: string) {
+    setToIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
   const handleSend = async () => {
-    if (!toId || !selectedThemeId || !message.trim() || !currentUser) return
+    if (toIds.length === 0 || !selectedThemeId || !message.trim() || !currentUser) return
     setSending(true)
-    const { data: ins } = await supabase.from('appreciations').insert({ from_team_member_id: currentUser.id, to_team_member_id: toId, theme_id: selectedThemeId, message: message.trim(), created_at: new Date().toISOString() }).select().single()
-    if (ins) {
-      await awardPoints(currentUser.id, POINTS.APPRECIATION_GIVEN, 'appreciation_given', ins.id)
-      await awardPoints(toId, POINTS.APPRECIATION_RECEIVED, 'appreciation_received', ins.id)
+    for (const recipientId of toIds) {
+      const { data: ins } = await supabase.from('appreciations').insert({ from_team_member_id: currentUser.id, to_team_member_id: recipientId, theme_id: selectedThemeId, message: message.trim(), created_at: new Date().toISOString() }).select().single()
+      if (ins) {
+        await awardPoints(currentUser.id, POINTS.APPRECIATION_GIVEN, 'appreciation_given', ins.id)
+        await awardPoints(recipientId, POINTS.APPRECIATION_RECEIVED, 'appreciation_received', ins.id)
+      }
     }
-    setToId(''); setSelectedThemeId(''); setMessage(''); setShowForm(false); setSending(false); load()
+    setToIds([]); setSelectedThemeId(''); setMessage(''); setShowForm(false); setSending(false); load()
   }
   if (loading) return (<MoodWrapper><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}><p style={{ color: '#3a7b3c', fontSize: '18px' }}>Loading...</p></div></MoodWrapper>)
   return (
@@ -63,15 +68,18 @@ export default function AppreciationsPage() {
         {showForm && (
           <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
             <p style={{ margin: '0 0 12px', fontWeight: 'bold', color: '#333', fontSize: '15px' }}>Send an Appreciation</p>
-            <select value={toId} onChange={e => setToId(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', marginBottom: '12px' }}>
-              <option value="">Who are you appreciating?</option>
-              {teamMembers.filter(t => t.id !== currentUser?.id).map(t => (<option key={t.id} value={t.id}>{t.full_name}</option>))}
-            </select>
+            <p style={{ margin: '0 0 6px', fontSize: 13, color: '#666' }}>Who are you appreciating? (select one or more)</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+              {teamMembers.filter(t => t.id !== currentUser?.id).map(t => {
+                const selected = toIds.includes(t.id)
+                return (<button key={t.id} onClick={() => toggleRecipient(t.id)} style={{ padding: '6px 14px', borderRadius: '20px', border: selected ? '2px solid #3a7b3c' : '1px solid #ddd', backgroundColor: selected ? '#e8f5e9' : 'white', cursor: 'pointer', fontSize: '13px', fontFamily: 'Cooper Light, system-ui, sans-serif', color: selected ? '#2e7d32' : '#333', transition: 'all 0.15s' }}>{selected ? '✓ ' : ''}{t.full_name}</button>)
+              })}
+            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
               {themes.map(t => (<button key={t.id} onClick={() => setSelectedThemeId(t.id)} style={{ padding: '6px 12px', borderRadius: '20px', border: selectedThemeId === t.id ? '2px solid #3a7b3c' : '1px solid #ddd', backgroundColor: selectedThemeId === t.id ? '#e8f5e9' : 'white', cursor: 'pointer', fontSize: '13px' }}>{t.theme_icon} {t.theme_name}</button>))}
             </div>
             <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="What did they do that made a difference?" rows={3} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', marginBottom: '12px', resize: 'vertical', boxSizing: 'border-box' }} />
-            <button onClick={handleSend} disabled={sending || !toId || !selectedThemeId || !message.trim()} style={{ width: '100%', backgroundColor: '#3a7b3c', color: 'white', border: 'none', borderRadius: '8px', padding: '12px', fontSize: '15px', fontWeight: 'bold', cursor: sending ? 'not-allowed' : 'pointer', opacity: (!toId || !selectedThemeId || !message.trim()) ? 0.5 : 1 }}>{sending ? 'Sending...' : 'Send Appreciation'}</button>
+            <button onClick={handleSend} disabled={sending || toIds.length === 0 || !selectedThemeId || !message.trim()} style={{ width: '100%', backgroundColor: '#3a7b3c', color: 'white', border: 'none', borderRadius: '8px', padding: '12px', fontSize: '15px', fontWeight: 'bold', cursor: sending ? 'not-allowed' : 'pointer', opacity: (toIds.length === 0 || !selectedThemeId || !message.trim()) ? 0.5 : 1 }}>{sending ? 'Sending...' : toIds.length > 1 ? `Send to ${toIds.length} People` : 'Send Appreciation'}</button>
           </div>
         )}
         <div style={{ display: 'grid', gap: '12px' }}>
