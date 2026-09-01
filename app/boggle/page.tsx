@@ -68,18 +68,25 @@ function wordScore(word: string): number {
   return 11 // 8+ letters
 }
 
-const ROUND_SECONDS = 150 // 2.5 minutes
+const TIMER_OPTIONS = [
+  { label: '10 min', seconds: 600 },
+  { label: '15 min', seconds: 900 },
+  { label: '30 min', seconds: 1800 },
+  { label: '60 min', seconds: 3600 },
+]
+const DEFAULT_SECONDS = 600 // 10 minutes
 
 export default function BogglePage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'lobby' | 'playing' | 'results'>('lobby')
+  const [selectedTimer, setSelectedTimer] = useState(DEFAULT_SECONDS)
 
   // Game state
   const [gameId, setGameId] = useState<string | null>(null)
   const [board, setBoard] = useState<string[]>([])
   const [players, setPlayers] = useState<any[]>([])
-  const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS)
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_SECONDS)
   const timerRef = useRef<any>(null)
 
   // Word entry
@@ -194,7 +201,7 @@ export default function BogglePage() {
   /* ── Start the game ── */
   async function startGame() {
     if (!gameId) return
-    const endsAt = new Date(Date.now() + ROUND_SECONDS * 1000).toISOString()
+    const endsAt = new Date(Date.now() + selectedTimer * 1000).toISOString()
     await supabase.from('boggle_games').update({
       status: 'playing', started_at: new Date().toISOString(), ends_at: endsAt
     }).eq('id', gameId)
@@ -337,7 +344,7 @@ export default function BogglePage() {
     setPlayers([])
     setFoundWords([])
     setResults(null)
-    setTimeLeft(ROUND_SECONDS)
+    setTimeLeft(DEFAULT_SECONDS)
     loadOpenGames()
   }
 
@@ -517,15 +524,37 @@ export default function BogglePage() {
               <p style={{ fontFamily: 'Cooper Light, serif', fontSize: 13, color: '#888', margin: '0 0 15px' }}>
                 Tell a coworker to open Boggle and join your game!
               </p>
-              {players.length >= 2 && (
-                <button onClick={startGame} style={{
-                  padding: '14px 30px', background: '#f37029', color: '#fff',
-                  border: 'none', borderRadius: 10, fontFamily: 'Cooper Black, serif',
-                  fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(243,112,41,0.3)',
-                }}>
-                  Start Game!
-                </button>
-              )}
+
+              {/* Timer selection */}
+              <div style={{ marginBottom: 15 }}>
+                <p style={{ fontFamily: 'Cooper Black, serif', fontSize: 13, color: '#543c2d', margin: '0 0 8px' }}>
+                  Round Length:
+                </p>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {TIMER_OPTIONS.map(opt => (
+                    <button
+                      key={opt.seconds}
+                      onClick={() => setSelectedTimer(opt.seconds)}
+                      style={{
+                        padding: '8px 16px', borderRadius: 8,
+                        border: selectedTimer === opt.seconds ? '2px solid #3a7b3c' : '2px solid #ddd',
+                        background: selectedTimer === opt.seconds ? '#e8f5e9' : '#fff',
+                        color: selectedTimer === opt.seconds ? '#2e7d32' : '#666',
+                        fontFamily: 'Cooper Black, serif', fontSize: 14,
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}
+                    >{opt.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <button onClick={startGame} style={{
+                padding: '14px 30px', background: '#f37029', color: '#fff',
+                border: 'none', borderRadius: 10, fontFamily: 'Cooper Black, serif',
+                fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(243,112,41,0.3)',
+              }}>
+                Start Game!
+              </button>
               <button onClick={backToLobby} style={{
                 display: 'block', margin: '15px auto 0', background: 'none', border: 'none',
                 color: '#999', fontFamily: 'Cooper Light, serif', fontSize: 13, cursor: 'pointer',
