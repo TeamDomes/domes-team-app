@@ -138,7 +138,6 @@ export default function Dashboard() {
       .from('products')
       .select('id, name, brand, category')
       .gte('menu_added_date', cutoff)
-      .eq('is_active', true)
       .order('name')
       .limit(50)
     setNewProducts(recentProducts || [])

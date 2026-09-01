@@ -240,11 +240,22 @@ export async function POST(req: Request) {
 
     // 7. Snapshot existing products BEFORE upsert (to detect new/returning items)
     // Check ALL sources — products from catalog CSV imports count as existing
-    // Supabase defaults to 1000 rows — fetch all with a high range
-    const { data: existingProducts } = await supabase
-      .from('products')
-      .select('name, is_active')
-      .range(0, 49999)
+    // Supabase defaults to 1000 rows — must paginate to get all
+    let existingProducts: { name: string; is_active: boolean }[] = []
+    let page = 0
+    const PAGE_SIZE = 1000
+    while (true) {
+      const from = page * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+      const { data: batch } = await supabase
+        .from('products')
+        .select('name, is_active')
+        .range(from, to)
+      if (!batch || batch.length === 0) break
+      existingProducts = existingProducts.concat(batch)
+      if (batch.length < PAGE_SIZE) break
+      page++
+    }
     const existingMap = new Map<string, boolean>()
     for (const p of (existingProducts || [])) {
       existingMap.set(p.name, p.is_active)
