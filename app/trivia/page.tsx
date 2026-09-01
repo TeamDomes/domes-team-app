@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { awardPoints, POINTS } from '@/lib/points'
 import MoodWrapper from '@/components/MoodWrapper'
 
+const MAX_PER_DAY = 10
+
 export default function TriviaPage() {
   const [teamMember, setTeamMember] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -11,8 +13,12 @@ export default function TriviaPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [answered, setAnswered] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
-  const [alreadyAnswered, setAlreadyAnswered] = useState(false)
   const [triviaStats, setTriviaStats] = useState({ correct: 0, total: 0 })
+  const [todayCount, setTodayCount] = useState(0)
+  const [todayCorrect, setTodayCorrect] = useState(0)
+  const [doneForDay, setDoneForDay] = useState(false)
+  const [allQuestions, setAllQuestions] = useState<any[]>([])
+  const [allAnswers, setAllAnswers] = useState<any[]>([])
 
   useEffect(() => { loadData() }, [])
 
@@ -31,37 +37,52 @@ export default function TriviaPage() {
     const today = new Date().toISOString().split('T')[0]
     const { data: allQs } = await supabase.from('trivia_questions').select('*')
     if (!allQs || allQs.length === 0) return
+    setAllQuestions(allQs)
+
     const { data: myAnswers } = await supabase.from('trivia_answers').select('*').eq('team_member_id', memberId)
+    setAllAnswers(myAnswers || [])
     const answeredIds = new Set((myAnswers || []).map((a: any) => a.question_id))
     const stats = {
       correct: (myAnswers || []).filter((a: any) => a.is_correct).length,
       total: (myAnswers || []).length
     }
     setTriviaStats(stats)
-    const todayAnswer = (myAnswers || []).find((a: any) => a.answered_date === today)
-    if (todayAnswer) {
-      const q = allQs.find((q: any) => q.id === todayAnswer.question_id)
-      if (q) {
-        setTriviaQ(q)
-        setSelectedAnswer(todayAnswer.answer)
-        setIsCorrect(todayAnswer.is_correct)
-        setAnswered(true)
-        setAlreadyAnswered(true)
-      }
+
+    // Count today's answers
+    const todayAnswers = (myAnswers || []).filter((a: any) => a.answered_date === today)
+    const todayC = todayAnswers.length
+    const todayCor = todayAnswers.filter((a: any) => a.is_correct).length
+    setTodayCount(todayC)
+    setTodayCorrect(todayCor)
+
+    if (todayC >= MAX_PER_DAY) {
+      setDoneForDay(true)
       return
     }
+
+    // Pick next question — adaptive difficulty
     const recent = (myAnswers || []).sort((a: any, b: any) => b.answered_date.localeCompare(a.answered_date)).slice(0, 5)
     const recentCorrect = recent.filter((a: any) => a.is_correct).length
     let difficulty = 'Easy'
     if (recentCorrect >= 4) difficulty = 'Hard'
     else if (recentCorrect >= 2) difficulty = 'Medium'
 
+    // Exclude questions already answered today
+    const todayIds = new Set(todayAnswers.map((a: any) => a.question_id))
     const unanswered = allQs.filter((q: any) => !answeredIds.has(q.id))
-    const pool = unanswered.length > 0 ? unanswered : allQs
+    const notToday = allQs.filter((q: any) => !todayIds.has(q.id))
+    const pool = unanswered.length > 0 ? unanswered : notToday.length > 0 ? notToday : allQs
     const diffPool = pool.filter((q: any) => q.difficulty === difficulty)
     const finalPool = diffPool.length > 0 ? diffPool : pool
-    const dayIndex = Math.floor(Date.now() / 86400000) % finalPool.length
-    setTriviaQ(finalPool[dayIndex])
+
+    if (finalPool.length === 0) {
+      setDoneForDay(true)
+      return
+    }
+
+    // Random pick instead of day-based index (since multiple per day now)
+    const randomIdx = Math.floor(Math.random() * finalPool.length)
+    setTriviaQ(finalPool[randomIdx])
   }
 
   async function handleAnswer(letter: string) {
@@ -70,6 +91,10 @@ export default function TriviaPage() {
     setSelectedAnswer(letter)
     setIsCorrect(correct)
     setAnswered(true)
+    const newTodayCount = todayCount + 1
+    setTodayCount(newTodayCount)
+    if (correct) setTodayCorrect(prev => prev + 1)
+
     await supabase.from('trivia_answers').insert({
       question_id: triviaQ.id,
       team_member_id: teamMember.id,
@@ -82,6 +107,18 @@ export default function TriviaPage() {
       total: prev.total + 1,
     }))
     await awardPoints(teamMember.id, correct ? POINTS.TRIVIA_CORRECT : POINTS.TRIVIA_WRONG, correct ? 'trivia_correct' : 'trivia_wrong', triviaQ.id)
+
+    if (newTodayCount >= MAX_PER_DAY) {
+      setDoneForDay(true)
+    }
+  }
+
+  function nextQuestion() {
+    setTriviaQ(null)
+    setSelectedAnswer(null)
+    setAnswered(false)
+    setIsCorrect(false)
+    if (teamMember) loadTrivia(teamMember.id)
   }
 
   if (loading) return (
@@ -117,13 +154,29 @@ export default function TriviaPage() {
 
         <div style={{ background: '#543c2d', borderRadius: 16, padding: 28, color: 'white', textAlign: 'center' }}>
           <h1 style={{ fontFamily: 'Cooper Black, serif', fontSize: 26, margin: '0 0 4px' }}>
-            {'\u{1F9E0}'} Trivia of the Day
+            {'\u{1F9E0}'} Daily Trivia
           </h1>
-          <p style={{ fontSize: 13, opacity: 0.6, margin: '0 0 24px' }}>
-            {triviaQ?.difficulty ? `Difficulty: ${triviaQ.difficulty}` : ''}
+          <p style={{ fontSize: 13, opacity: 0.6, margin: '0 0 6px' }}>
+            Question {Math.min(todayCount + (answered ? 0 : 1), MAX_PER_DAY)} of {MAX_PER_DAY} today
+            {todayCorrect > 0 && ` · ${todayCorrect} correct`}
           </p>
+          {triviaQ && (
+            <p style={{ fontSize: 12, opacity: 0.4, margin: '0 0 20px' }}>
+              {triviaQ.difficulty ? `Difficulty: ${triviaQ.difficulty}` : ''}
+            </p>
+          )}
 
-          {triviaQ ? (
+          {doneForDay ? (
+            <div style={{ padding: 20 }}>
+              <p style={{ fontSize: 40, margin: '0 0 12px' }}>{'\u{1F389}'}</p>
+              <p style={{ fontSize: 18, fontFamily: 'Cooper Black, serif', margin: '0 0 8px' }}>
+                All done for today!
+              </p>
+              <p style={{ fontSize: 15, opacity: 0.7, margin: 0 }}>
+                You answered {todayCount} questions ({todayCorrect} correct). Come back tomorrow!
+              </p>
+            </div>
+          ) : triviaQ ? (
             <>
               <p style={{ margin: '0 0 20px', fontSize: 18, lineHeight: 1.5, fontFamily: 'Cooper Light, system-ui, sans-serif' }}>
                 {triviaQ.question}
@@ -137,7 +190,7 @@ export default function TriviaPage() {
                 ))}
               </div>
 
-              {answered && !alreadyAnswered && (
+              {answered && (
                 <div style={{ marginTop: 12, textAlign: 'center' }}>
                   <span style={{ fontSize: 16, color: '#ffcb1f', fontFamily: 'Cooper Black, serif' }}>
                     +{isCorrect ? POINTS.TRIVIA_CORRECT : POINTS.TRIVIA_WRONG} points!
@@ -151,11 +204,20 @@ export default function TriviaPage() {
                   background: isCorrect ? 'rgba(58,123,60,0.3)' : 'rgba(211,47,47,0.3)',
                 }}>
                   <p style={{ margin: 0, fontSize: 16, lineHeight: 1.5 }}>
-                    {alreadyAnswered ? 'You already answered today! ' : ''}
                     {isCorrect ? 'Correct! ' : 'Not quite! '}
                     {triviaQ.explanation}
                   </p>
                 </div>
+              )}
+
+              {answered && !doneForDay && (
+                <button onClick={nextQuestion} style={{
+                  marginTop: 16, padding: '14px 30px', background: '#ffcb1f', color: '#543c2d',
+                  border: 'none', borderRadius: 10, fontFamily: 'Cooper Black, serif',
+                  fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(255,203,31,0.4)',
+                }}>
+                  Next Question →
+                </button>
               )}
             </>
           ) : (
