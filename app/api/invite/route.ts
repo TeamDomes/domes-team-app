@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 /* GET — list all team members with auth status */
 export async function GET() {
   try {
-    const { data: team } = await supabaseAdmin.from('team').select('id, full_name, email, role, type, auth_user_id')
+    const { data: team } = await supabaseAdmin.from('team').select('id, full_name, email, role, type, auth_user_id, is_active').eq('is_active', true)
     const { data: authData } = await supabaseAdmin.auth.admin.listUsers()
     const authEmails = new Set(
       (authData?.users || []).map((u: any) => u.email?.toLowerCase())

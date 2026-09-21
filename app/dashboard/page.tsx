@@ -98,12 +98,12 @@ export default function Dashboard() {
   }, [router])
 
   async function loadLeaderboard() {
-    const { data: teamData } = await supabase.from('team').select('id, full_name, role')
+    const { data: teamData } = await supabase.from('team').select('id, full_name, role, is_active')
     const nameMap: Record<string, string> = {}
     const budtenderIds = new Set<string>()
     ;(teamData || []).forEach((t: any) => {
       nameMap[t.id] = t.full_name
-      if (t.role === 'Budtender') budtenderIds.add(t.id)
+      if (t.role === 'Budtender' && t.is_active !== false) budtenderIds.add(t.id)
     })
     const { data: allStats } = await supabase
       .from('weekly_stats')
@@ -149,7 +149,7 @@ export default function Dashboard() {
   }
 
   async function loadCelebrations() {
-    const { data: allMembers } = await supabase.from('team').select('full_name, birthday, hire_date')
+    const { data: allMembers } = await supabase.from('team').select('full_name, birthday, hire_date, is_active').eq('is_active', true)
     if (!allMembers) return
     const today = new Date()
     const m = today.getMonth() + 1
@@ -188,7 +188,8 @@ export default function Dashboard() {
     setTotalPoints(total)
     const now = new Date()
     const monday = new Date(now)
-    monday.setDate(now.getDate() - now.getDay() + 1)
+    const dow = now.getDay()
+    monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1))
     monday.setHours(0, 0, 0, 0)
     const week = allPts.filter((p: any) => new Date(p.created_at) >= monday).reduce((sum: number, p: any) => sum + p.points, 0)
     setWeekPoints(week)

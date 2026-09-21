@@ -1,9 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
+// Use service role key — webhook is called by Zapier (no user session / RLS won't work with anon key)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
 // Staff first names for auto-detection

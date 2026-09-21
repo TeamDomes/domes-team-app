@@ -22,8 +22,8 @@ export default function BingoPage() {
       const { data: cycleData } = await supabase.from('bingo_cycles').select('*').eq('status', 'Active').single()
       setCycle(cycleData)
       if (!cycleData) { setLoading(false); return }
-      const { data: squaresData } = await supabase.from('bingo_squares').select('*, team!inner(full_name, role, type)').eq('cycle_id', cycleData.id).order('team_member_id')
-      setSquares((squaresData || []).filter((s: any) => s.team?.role === 'Budtender'))
+      const { data: squaresData } = await supabase.from('bingo_squares').select('*, team!inner(full_name, role, type, is_active)').eq('cycle_id', cycleData.id).order('team_member_id')
+      setSquares((squaresData || []).filter((s: any) => s.team?.role === 'Budtender' && s.team?.is_active !== false))
       const { data: winnersData } = await supabase.from('bingo_winners').select('*, team(full_name)').order('date_won', { ascending: false }).range(0, 9)
       setWinners(winnersData || [])
       setLoading(false)

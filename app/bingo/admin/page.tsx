@@ -81,8 +81,8 @@ export default function BingoAdminPage() {
       const { data: cyc } = await supabase.from('bingo_cycles').select('*').eq('status', 'Active').single()
       setCycle(cyc)
       if (!cyc) { setLoading(false); return }
-      const { data: sq } = await supabase.from('bingo_squares').select('*, team!inner(id, full_name, first_name, role, type)').eq('cycle_id', cyc.id).order('team_member_id')
-      setBudtenders((sq || []).filter((s: any) => s.team?.role === 'Budtender'))
+      const { data: sq } = await supabase.from('bingo_squares').select('*, team!inner(id, full_name, first_name, role, type, is_active)').eq('cycle_id', cyc.id).order('team_member_id')
+      setBudtenders((sq || []).filter((s: any) => s.team?.role === 'Budtender' && s.team?.is_active !== false))
       setLoading(false)
     }
     load()

@@ -38,6 +38,12 @@ export default function GrowerPage() {
 
     const todayStr = new Date().toISOString().split('T')[0]
 
+    // Only feature brands that have actual products in inventory
+    const { data: carriedProducts } = await supabase
+      .from('products')
+      .select('brand')
+    const carriedBrandNames = [...new Set((carriedProducts || []).map((p: any) => p.brand).filter(Boolean))]
+
     const { data: featured } = await supabase
       .from('brands')
       .select('*')
@@ -47,13 +53,14 @@ export default function GrowerPage() {
     if (featured && featured.length > 0) {
       setBrand(featured[0])
     } else {
-      // Priority 1: Brand with talking points that hasn't been featured yet
+      // Priority 1: Brand with talking points that hasn't been featured yet AND is carried
       const { data: unshown } = await supabase
         .from('brands')
         .select('*')
         .eq('is_active', true)
         .is('featured_week', null)
         .not('talking_points', 'is', null)
+        .in('name', carriedBrandNames)
         .limit(1)
 
       if (unshown && unshown.length > 0) {
@@ -65,12 +72,13 @@ export default function GrowerPage() {
           .single()
         setBrand(updated || unshown[0])
       } else {
-        // Priority 2: Cycle back — pick the brand with talking points featured longest ago
+        // Priority 2: Cycle back — pick the carried brand with talking points featured longest ago
         const { data: oldest } = await supabase
           .from('brands')
           .select('*')
           .eq('is_active', true)
           .not('talking_points', 'is', null)
+          .in('name', carriedBrandNames)
           .order('featured_week', { ascending: true })
           .limit(1)
 
@@ -83,11 +91,12 @@ export default function GrowerPage() {
             .single()
           setBrand(updated || oldest[0])
         } else {
-          // Priority 3: Any active brand at all
+          // Priority 3: Any carried active brand at all
           const { data: anyBrand } = await supabase
             .from('brands')
             .select('*')
             .eq('is_active', true)
+            .in('name', carriedBrandNames)
             .is('featured_week', null)
             .limit(1)
           if (anyBrand && anyBrand.length > 0) {
