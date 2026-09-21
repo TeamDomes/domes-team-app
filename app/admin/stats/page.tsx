@@ -79,19 +79,17 @@ async function parseFile(file: File): Promise<string[][]> {
   if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
     const buffer = await file.arrayBuffer()
     const workbook = XLSX.read(buffer, { type: 'array' })
-    // Try each sheet — pick the first one that has a "Budtender" header or real data rows
+    // Try each sheet — pick the first one that has a "Budtender" header in ANY column
     let bestRows: string[][] = []
     for (const sheetName of workbook.SheetNames) {
       const sheet = workbook.Sheets[sheetName]
       const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
       const cleaned = rows.map(r => r.map(c => String(c).trim()))
-      // Check if this sheet has a Budtender-style header (case-insensitive)
-      const hasBudtenderHeader = cleaned.some(r => r[0]?.toLowerCase().includes('budtender'))
+      const hasBudtenderHeader = cleaned.some(r => r.some(c => c.toLowerCase().includes('budtender')))
       if (hasBudtenderHeader) {
         console.log('[parseFile] Found Budtender header on sheet:', sheetName)
         return cleaned
       }
-      // Keep the sheet with the most data rows as fallback
       if (cleaned.length > bestRows.length) bestRows = cleaned
     }
     console.log('[parseFile] No Budtender header found on any sheet, using sheet with most rows:', bestRows.length, 'rows')
@@ -261,21 +259,41 @@ export default function StatsImportPage() {
         teamMembersCount: team.length,
       })
 
+      // ── Helper: find which column contains "budtender" or "employee" in a header row ──
+      function findNameCol(rows: string[][]): { headerIdx: number; nameCol: number } {
+        for (let i = 0; i < Math.min(rows.length, 10); i++) {
+          const row = rows[i] || []
+          for (let j = 0; j < row.length; j++) {
+            const cell = row[j]?.toLowerCase() || ''
+            if (cell.includes('budtender')) return { headerIdx: i, nameCol: j }
+          }
+        }
+        // Fallback: check for "employee"
+        for (let i = 0; i < Math.min(rows.length, 10); i++) {
+          const row = rows[i] || []
+          for (let j = 0; j < row.length; j++) {
+            const cell = row[j]?.toLowerCase() || ''
+            if (cell.includes('employee')) return { headerIdx: i, nameCol: j }
+          }
+        }
+        return { headerIdx: 4, nameCol: 0 }
+      }
+
       // ── 1. Parse AOV (optional) ──
       const aovRows = aovFile ? await parseFile(aovFile) : []
-      let aovHeaderIdx = aovRows.findIndex(r => r[0]?.toLowerCase().includes('budtender'))
-      if (aovHeaderIdx < 0) aovHeaderIdx = aovRows.findIndex(r => r[0]?.toLowerCase().includes('employee'))
-      if (aovHeaderIdx < 0) aovHeaderIdx = 4
+      const aovLoc = findNameCol(aovRows)
+      const aovHeaderIdx = aovLoc.headerIdx
+      const aovNameCol = aovLoc.nameCol
       const aovHeader = aovRows[aovHeaderIdx] || []
 
       // Debug: log AOV parsing details
       if (aovFile) {
         console.log('[Import Debug] AOV file:', aovFile.name, 'type:', aovFile.type, 'size:', aovFile.size)
         console.log('[Import Debug] AOV total rows:', aovRows.length)
-        console.log('[Import Debug] AOV header row index:', aovHeaderIdx)
+        console.log('[Import Debug] AOV header row index:', aovHeaderIdx, 'name column:', aovNameCol)
         console.log('[Import Debug] AOV header:', aovHeader)
         if (aovRows.length > 0) {
-          console.log('[Import Debug] AOV first 3 rows:', aovRows.slice(0, 3))
+          console.log('[Import Debug] AOV first 6 rows:', aovRows.slice(0, 6))
         }
       }
 
@@ -283,9 +301,10 @@ export default function StatsImportPage() {
       let aovSkippedNames: string[] = []
       for (let i = aovHeaderIdx + 1; i < aovRows.length; i++) {
         const row = aovRows[i]
-        if (!row[0]) continue
-        const member = findMember(row[0], team)
-        if (!member) { aovSkippedNames.push(row[0]); continue }
+        const nameVal = row[aovNameCol]
+        if (!nameVal) continue
+        const member = findMember(nameVal, team)
+        if (!member) { aovSkippedNames.push(nameVal); continue }
         const mid = member.id
         const netSalesIdx = aovHeader.findIndex((h: string) => h.toLowerCase() === 'net sales')
         const netAOVIdx = aovHeader.findIndex((h: string) => h.toLowerCase() === 'net aov')
@@ -304,21 +323,20 @@ export default function StatsImportPage() {
       if (aovFile) {
         console.log('[Import Debug] AOV matched members:', Object.keys(aovData).length)
         console.log('[Import Debug] AOV skipped names:', aovSkippedNames)
-        console.log('[Import Debug] AOV column indices — Net Sales:', aovHeader?.findIndex((h: string) => h.toLowerCase() === 'net sales'), 'Net AOV:', aovHeader?.findIndex((h: string) => h.toLowerCase() === 'net aov'), 'Total Orders:', aovHeader?.findIndex((h: string) => h.toLowerCase() === 'total orders'))
       }
 
       // ── 2. Parse Upsell (optional) ──
       const upsellRows = upsellFile ? await parseFile(upsellFile) : []
-      let upsellHeaderIdx = upsellRows.findIndex(r => r[0]?.toLowerCase().includes('budtender'))
-      if (upsellHeaderIdx < 0) upsellHeaderIdx = upsellRows.findIndex(r => r[0]?.toLowerCase().includes('employee'))
-      if (upsellHeaderIdx < 0) upsellHeaderIdx = 4
+      const upsellLoc = findNameCol(upsellRows)
+      const upsellHeaderIdx = upsellLoc.headerIdx
+      const upsellNameCol = upsellLoc.nameCol
       const upsellHeader = upsellRows[upsellHeaderIdx] || []
 
       // Debug: log Upsell parsing details
       if (upsellFile) {
         console.log('[Import Debug] Upsell file:', upsellFile.name, 'type:', upsellFile.type, 'size:', upsellFile.size)
         console.log('[Import Debug] Upsell total rows:', upsellRows.length)
-        console.log('[Import Debug] Upsell header row index:', upsellHeaderIdx)
+        console.log('[Import Debug] Upsell header row index:', upsellHeaderIdx, 'name column:', upsellNameCol)
         console.log('[Import Debug] Upsell header:', upsellHeader)
       }
 
@@ -326,9 +344,10 @@ export default function StatsImportPage() {
       let upsellSkippedNames: string[] = []
       for (let i = upsellHeaderIdx + 1; i < upsellRows.length; i++) {
         const row = upsellRows[i]
-        if (!row[0]) continue
-        const member = findMember(row[0], team)
-        if (!member) { upsellSkippedNames.push(row[0]); continue }
+        const nameVal = row[upsellNameCol]
+        if (!nameVal) continue
+        const member = findMember(nameVal, team)
+        if (!member) { upsellSkippedNames.push(nameVal); continue }
         const txIdx = upsellHeader.findIndex((h: string) => h.toLowerCase() === 'transactions')
         const upsellTxIdx = upsellHeader.findIndex((h: string) => h.toLowerCase().includes('upsell transactions'))
         upsellData[member.id] = {
