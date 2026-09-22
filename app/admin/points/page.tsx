@@ -132,8 +132,9 @@ export default function PointsReportPage() {
     // Aggregate per member
     const totals: Record<string, { points: number; activities: Record<string, number> }> = {}
 
-    // Init all team members
+    // Init all active team members
     Object.keys(tMap).forEach(id => {
+      if (tMap[id]?.is_active === false) return
       totals[id] = { points: 0, activities: {} }
     })
 

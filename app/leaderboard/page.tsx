@@ -53,7 +53,7 @@ export default function LeaderboardPage() {
     const uniqueWeeks = [...new Set(stats.map(s => s.week_ending))].sort().reverse()
 
     if (viewMode === 'week') {
-      const weekStats = stats.filter(s => s.week_ending === latestWeek && s.include_in_leaderboard !== false)
+      const weekStats = stats.filter(s => s.week_ending === latestWeek && s.include_in_leaderboard !== false && teamMap[s.team_member_id]?.is_active !== false)
       return weekStats
         .map(s => ({
           memberId: s.team_member_id,
@@ -66,7 +66,7 @@ export default function LeaderboardPage() {
     } else {
       // Rolling 4-week average
       const last4Weeks = uniqueWeeks.slice(0, 4)
-      const rollingStats = stats.filter(s => last4Weeks.includes(s.week_ending) && s.include_in_leaderboard !== false)
+      const rollingStats = stats.filter(s => last4Weeks.includes(s.week_ending) && s.include_in_leaderboard !== false && teamMap[s.team_member_id]?.is_active !== false)
 
       const byMember: Record<string, { total: number; count: number; name: string; type: string }> = {}
       rollingStats.forEach(s => {

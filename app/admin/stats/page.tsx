@@ -620,7 +620,30 @@ export default function StatsImportPage() {
 
       // ── Auto-mark BINGO squares from uploaded data ──
       const bingoUpdates: string[] = []
-      const { data: activeCycle } = await supabase.from('bingo_cycles').select('id').eq('status', 'Active').single()
+      let { data: activeCycle } = await supabase.from('bingo_cycles').select('id').eq('status', 'Active').single()
+
+      // Auto-reset: if the active cycle already has a BINGO winner, close it and start fresh
+      if (activeCycle) {
+        const { data: hasWinner } = await supabase.from('bingo_squares').select('team_member_id, team!inner(full_name)').eq('cycle_id', activeCycle.id).eq('has_bingo', true).limit(1)
+        if (hasWinner && hasWinner.length > 0) {
+          console.log('[BINGO] Auto-resetting cycle — winner:', (hasWinner[0] as any).team?.full_name)
+          // Log the winner
+          await supabase.from('bingo_winners').insert({ id: 'WIN-' + Date.now(), team_member_id: hasWinner[0].team_member_id, cycle_id: activeCycle.id, date_won: new Date().toISOString().split('T')[0] }).then(() => {}).catch(() => {})
+          // Close old cycle
+          await supabase.from('bingo_cycles').update({ status: 'Completed' }).eq('id', activeCycle.id)
+          // Start new cycle
+          const nid = 'CYC' + String(Date.now()).slice(-4)
+          await supabase.from('bingo_cycles').insert({ id: nid, cycle_start_date: new Date().toISOString().split('T')[0], status: 'Active' })
+          // Create fresh squares for ALL active budtenders
+          const { data: allBudtenders } = await supabase.from('team').select('id').eq('role', 'Budtender').eq('is_active', true)
+          if (allBudtenders && allBudtenders.length > 0) {
+            await supabase.from('bingo_squares').insert(allBudtenders.map(b => ({ id: 'BS-' + b.id + '-' + nid, team_member_id: b.id, cycle_id: nid, square_b: false, square_i: false, square_n: false, square_g: false, square_o: false, squares_filled: 0, has_bingo: false })))
+          }
+          activeCycle = { id: nid }
+          bingoUpdates.push('🎉 New BINGO cycle started (previous winner: ' + (hasWinner[0] as any).team?.full_name + ')')
+        }
+      }
+
       if (activeCycle) {
         const { data: bingoSquares } = await supabase
           .from('bingo_squares')
@@ -740,8 +763,10 @@ export default function StatsImportPage() {
   const teamMap: Record<string, any> = {}
   teamMembers.forEach((t: any) => { teamMap[t.id] = t })
 
+  const activeIds = new Set(teamMembers.filter((t: any) => t.is_active !== false).map((t: any) => t.id))
   const statsByWeek: Record<string, any[]> = {}
   existingStats.forEach(s => {
+    if (!activeIds.has(s.team_member_id)) return
     const w = s.week_ending
     if (!statsByWeek[w]) statsByWeek[w] = []
     statsByWeek[w].push(s)

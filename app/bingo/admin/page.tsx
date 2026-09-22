@@ -297,7 +297,10 @@ export default function BingoAdminPage() {
     await supabase.from('bingo_cycles').update({ status:'Completed' }).eq('id', cycle.id)
     const nid = 'CYC'+String(Date.now()).slice(-4)
     await supabase.from('bingo_cycles').insert({ id:nid, cycle_start_date:new Date().toISOString().split('T')[0], status:'Active' })
-    await supabase.from('bingo_squares').insert(budtenders.map(b => ({ id:'BS-'+b.team_member_id+'-'+nid, team_member_id:b.team_member_id, cycle_id:nid, square_b:false, square_i:false, square_n:false, square_g:false, square_o:false, squares_filled:0, has_bingo:false })))
+    // Pull ALL active budtenders from team table (not just old cycle's list)
+    const { data: allBudtenders } = await supabase.from('team').select('id').eq('role', 'Budtender').eq('is_active', true)
+    const roster = allBudtenders || budtenders.map(b => ({ id: b.team_member_id }))
+    await supabase.from('bingo_squares').insert(roster.map(b => ({ id:'BS-'+b.id+'-'+nid, team_member_id:b.id, cycle_id:nid, square_b:false, square_i:false, square_n:false, square_g:false, square_o:false, squares_filled:0, has_bingo:false })))
     setMessage('New cycle started!'); window.location.reload()
   }
 
