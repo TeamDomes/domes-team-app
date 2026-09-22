@@ -144,9 +144,12 @@ export default function StatsImportPage() {
     })
     setIsAdmin(me?.role === 'Admin' || me?.role === 'Lead')
 
+    // Only load stats for active team members
+    const activeTeamIds = (teamData || []).filter((t: any) => t.is_active !== false).map((t: any) => t.id)
     const { data: stats } = await supabase
       .from('weekly_stats')
       .select('*')
+      .in('team_member_id', activeTeamIds)
       .order('week_ending', { ascending: false })
       .limit(50)
     setExistingStats(stats || [])

@@ -37,9 +37,11 @@ export default function LeaderboardPage() {
     ;(teamData || []).forEach((t: any) => { map[t.id] = t })
     setTeamMap(map)
 
+    const activeTeamIds = (teamData || []).filter((t: any) => t.is_active !== false).map((t: any) => t.id)
     const { data: allStats } = await supabase
       .from('weekly_stats')
       .select('*')
+      .in('team_member_id', activeTeamIds)
       .order('week_ending', { ascending: false })
     setStats(allStats || [])
 
