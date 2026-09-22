@@ -42,8 +42,8 @@ export default function AllTimeStatsPage() {
     // Build per-member aggregates
     const memberStats: Record<string, any> = {}
 
-    // Init all team members
-    ;(teamData || []).forEach((t: any) => {
+    // Init all active team members
+    ;(teamData || []).filter((t: any) => t.is_active !== false).forEach((t: any) => {
       memberStats[t.id] = {
         id: t.id,
         name: t.full_name,

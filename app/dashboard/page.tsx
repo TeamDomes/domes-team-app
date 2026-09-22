@@ -400,6 +400,8 @@ export default function Dashboard() {
                   <a href="/admin/catalog" style={{ color: '#3a7b3c', fontSize: 11, textDecoration: 'none' }}>Import Catalog</a>
                   <span style={{ color: '#ccc', fontSize: 11 }}>|</span>
                   <a href="/admin/trivia" style={{ color: '#3a7b3c', fontSize: 11, textDecoration: 'none' }}>Trivia</a>
+                  <span style={{ color: '#ccc', fontSize: 11 }}>|</span>
+                  <a href="/admin/team" style={{ color: '#3a7b3c', fontSize: 11, textDecoration: 'none' }}>Team</a>
                 </div>
               )}
             </div>
