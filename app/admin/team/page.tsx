@@ -11,7 +11,7 @@ export default function AdminTeamPage() {
   const [filter, setFilter] = useState<'active' | 'inactive' | 'all'>('active')
   const [showAdd, setShowAdd] = useState(false)
   const [adding, setAdding] = useState(false)
-  const [newMember, setNewMember] = useState({ full_name: '', email: '', role: 'Budtender', type: 'Full-Time' })
+  const [newMember, setNewMember] = useState({ full_name: '', email: '', role: 'Budtender', type: 'FT' })
 
   useEffect(() => { loadData() }, [])
 
@@ -76,7 +76,7 @@ export default function AdminTeamPage() {
     if (error) {
       alert('Failed to add: ' + error.message)
     } else {
-      setNewMember({ full_name: '', email: '', role: 'Budtender', type: 'Full-Time' })
+      setNewMember({ full_name: '', email: '', role: 'Budtender', type: 'FT' })
       setShowAdd(false)
       await loadData()
     }
@@ -197,8 +197,8 @@ export default function AdminTeamPage() {
                   onChange={e => setNewMember(prev => ({ ...prev, type: e.target.value }))}
                   style={inputStyle}
                 >
-                  <option value="Full-Time">Full-Time</option>
-                  <option value="Part-Time">Part-Time</option>
+                  <option value="FT">Full-Time</option>
+                  <option value="PT">Part-Time</option>
                 </select>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function AdminTeamPage() {
                 {adding ? 'Adding...' : 'Add Employee'}
               </button>
               <button
-                onClick={() => { setShowAdd(false); setNewMember({ full_name: '', email: '', role: 'Budtender', type: 'Full-Time' }) }}
+                onClick={() => { setShowAdd(false); setNewMember({ full_name: '', email: '', role: 'Budtender', type: 'FT' }) }}
                 style={{
                   padding: '10px 24px', borderRadius: 8, fontSize: 14,
                   border: '1px solid #ddd', background: 'white', color: '#666',
