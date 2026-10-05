@@ -14,10 +14,20 @@ function parseVariance(val: any): number {
   return parseFloat(str) || 0
 }
 
+// Alternate names / aliases (Dutchie display name → team first_name)
+const NAME_ALIASES: Record<string, string> = {
+  'mari': 'samaria',
+}
+
 // Match a report name to a team member by first name
 function findMember(reportName: string, team: any[]): any | null {
   if (!reportName) return null
-  const rLow = reportName.toLowerCase().trim()
+  let rLow = reportName.toLowerCase().trim()
+  // Check aliases first
+  const rFirst0 = rLow.split(/[\s.]/)[0]
+  if (NAME_ALIASES[rFirst0]) {
+    rLow = rLow.replace(rFirst0, NAME_ALIASES[rFirst0])
+  }
   // Try exact full_name match first
   for (const t of team) {
     if (t.full_name?.toLowerCase() === rLow) return t
