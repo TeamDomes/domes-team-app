@@ -17,6 +17,7 @@ function parseVariance(val: any): number {
 // Alternate names / aliases (Dutchie display name → team first_name)
 const NAME_ALIASES: Record<string, string> = {
   'mari': 'samaria',
+  'mal': 'mallory',
 }
 
 // Match a report name to a team member by first name
