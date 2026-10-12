@@ -22,7 +22,6 @@ const navSections = [
   { title: 'Games', items: [
     { label: 'Trivia',        href: '/trivia',        icon: 'ti-brain',            desc: 'Test Your Knowledge', bg: '#c8a84e', text: '#1a2f2a' },
     { label: 'Wordle',        href: '/wordle',         icon: 'ti-vocabulary',       desc: 'Word puzzle',       bg: '#2d9e75', text: '#fff' },
-    { label: 'Cannaboggle',   href: '/boggle',           icon: 'ti-grid-dots',       desc: 'Word hunt',         bg: '#8B5E3C', text: '#f4e6b4' },
   ]},
 ]
 
@@ -522,36 +521,39 @@ export default function Dashboard() {
                 letterSpacing: 0.8,
                 textTransform: 'uppercase',
               }}>{section.title}</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                 {section.items.map((item) => (
                   <button
                     key={item.href}
                     className="tile-hover"
                     onClick={() => router.push(item.href)}
                     style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start',
                       background: item.bg,
                       border: 'none',
-                      borderRadius: 14, padding: '22px 16px', cursor: 'pointer',
-                      textAlign: 'center', width: '100%', minHeight: 120,
+                      borderRadius: 14, padding: '20px 24px', cursor: 'pointer',
+                      textAlign: 'left', width: '100%', minHeight: 80,
                       boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                      gap: 16,
                     }}
                   >
                     <i className={`ti ${item.icon}`} style={{
-                      fontSize: 28, marginBottom: 8, display: 'block',
+                      fontSize: 30, display: 'block',
                       color: item.text,
                       opacity: 0.85,
                     }} aria-hidden="true" />
-                    <p style={{
-                      margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: 18,
-                      color: item.text,
-                    }}>{item.label}</p>
-                    <p className="tile-desc" style={{
-                      margin: '4px 0 0', fontSize: 12,
-                      color: item.text,
-                      fontWeight: 'bold',
-                      fontFamily: 'Cooper Light, system-ui, sans-serif',
-                    }}>{item.desc}</p>
+                    <div>
+                      <p style={{
+                        margin: 0, fontFamily: 'TAY Bone Quixote, Cooper Black, serif', fontSize: 18,
+                        color: item.text,
+                      }}>{item.label}</p>
+                      <p className="tile-desc" style={{
+                        margin: '4px 0 0', fontSize: 12,
+                        color: item.text,
+                        fontWeight: 'bold',
+                        fontFamily: 'Cooper Light, system-ui, sans-serif',
+                      }}>{item.desc}</p>
+                    </div>
                   </button>
                 ))}
               </div>
