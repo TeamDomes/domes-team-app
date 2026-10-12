@@ -445,48 +445,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* New Products This Week */}
-          {newProducts.length > 0 && (
-            <div style={{
-              padding: '20px 22px', marginBottom: 16,
-              background: '#f4e6b4', borderRadius: 14,
-              border: '1px solid rgba(84,60,45,0.15)',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <span style={{
-                  background: '#f37029', color: '#fff', fontFamily: 'Cooper Black, serif',
-                  fontSize: 11, padding: '4px 10px', borderRadius: 20, letterSpacing: 0.8,
-                  textTransform: 'uppercase' as const,
-                }}>NEW</span>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#543c2d', letterSpacing: 1.5, textTransform: 'uppercase' as const, fontFamily: 'Cooper Black, serif' }}>
-                  New Products This Week
-                </p>
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {newProducts.map((p: any) => (
-                  <div
-                    key={p.id}
-                    style={{
-                      background: '#fff', borderRadius: 12, padding: '14px 18px',
-                      display: 'flex', flexDirection: 'column',
-                      gap: 4, border: '1px solid rgba(84,60,45,0.1)',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
-                      flex: '1 1 calc(50% - 10px)', minWidth: 150,
-                    }}
-                  >
-                    <span style={{
-                      fontFamily: 'Cooper Black, serif', fontSize: 14, color: '#543c2d',
-                    }}>{'🌿'} {p.name}</span>
-                    <span style={{
-                      fontFamily: 'Cooper Light, serif', fontSize: 12, color: '#3a7b3c',
-                    }}>{p.category || 'Uncategorized'}{p.brand ? ` · ${p.brand}` : ''}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Get to Know You */}
           {!hasQuestionnaire && (
             <button
@@ -559,6 +517,48 @@ export default function Dashboard() {
               </div>
             </div>
           ))}
+
+          {/* New Products This Week */}
+          {newProducts.length > 0 && (
+            <div style={{
+              padding: '20px 22px', marginBottom: 16, marginTop: 8,
+              background: '#f4e6b4', borderRadius: 14,
+              border: '1px solid rgba(84,60,45,0.15)',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <span style={{
+                  background: '#f37029', color: '#fff', fontFamily: 'Cooper Black, serif',
+                  fontSize: 11, padding: '4px 10px', borderRadius: 20, letterSpacing: 0.8,
+                  textTransform: 'uppercase' as const,
+                }}>NEW</span>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#543c2d', letterSpacing: 1.5, textTransform: 'uppercase' as const, fontFamily: 'Cooper Black, serif' }}>
+                  New Products This Week
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                {newProducts.map((p: any) => (
+                  <div
+                    key={p.id}
+                    style={{
+                      background: '#fff', borderRadius: 12, padding: '14px 18px',
+                      display: 'flex', flexDirection: 'column',
+                      gap: 4, border: '1px solid rgba(84,60,45,0.1)',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                      flex: '1 1 calc(50% - 10px)', minWidth: 150,
+                    }}
+                  >
+                    <span style={{
+                      fontFamily: 'Cooper Black, serif', fontSize: 14, color: '#543c2d',
+                    }}>{'🌿'} {p.name}</span>
+                    <span style={{
+                      fontFamily: 'Cooper Light, serif', fontSize: 12, color: '#3a7b3c',
+                    }}>{p.category || 'Uncategorized'}{p.brand ? ` · ${p.brand}` : ''}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
