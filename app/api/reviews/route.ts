@@ -7,10 +7,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-// Staff first names for auto-detection
+// Staff first names for auto-detection (active members only)
 async function getStaffNames(): Promise<string[]> {
-  const { data } = await supabase.from('team').select('full_name')
-  return (data || []).map((t: any) => t.full_name.split(' ')[0])
+  const { data } = await supabase.from('team').select('full_name, is_active')
+  return (data || []).filter((t: any) => t.is_active !== false).map((t: any) => t.full_name.split(' ')[0])
 }
 
 // Levenshtein distance for fuzzy name matching
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
     // Award points + mark BINGO O square for mentioned staff (4+ star reviews)
     if (mentioned.length > 0 && rating >= 4) {
-      const { data: teamData } = await supabase.from('team').select('id, full_name')
+      const { data: teamData } = await supabase.from('team').select('id, full_name, is_active')
 
       // Find active BINGO cycle
       const { data: activeCycle } = await supabase
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
 
       for (const name of mentioned) {
         const match = (teamData || []).find((t: any) =>
-          t.full_name.split(' ')[0].toLowerCase() === name.toLowerCase()
+          t.is_active !== false && t.full_name.split(' ')[0].toLowerCase() === name.toLowerCase()
         )
         if (match) {
           // Award 250 points

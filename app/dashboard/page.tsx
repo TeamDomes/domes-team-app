@@ -10,17 +10,14 @@ const navSections = [
   { title: 'Performance', items: [
     { label: 'My Stats',      href: '/stats',          icon: 'ti-chart-bar',        desc: 'How Am I Doing?',   bg: '#387dac', text: '#fff' },
     { label: 'BINGO',         href: '/bingo',          icon: 'ti-target',           desc: 'Weekly card',       bg: '#7b5ea7', text: '#fff' },
-    { label: 'Recap',         href: '/recap',           icon: 'ti-confetti',        desc: 'Weekly Wrap-Up',    bg: '#3a7b3c', text: '#fff' },
   ]},
   { title: 'Team', items: [
     { label: 'Appreciations', href: '/appreciations',  icon: 'ti-heart-handshake',  desc: 'Spread The Love',   bg: '#f37029', text: '#fff' },
     { label: 'Wall of Love',  href: '/wall-of-love',    icon: 'ti-star',            desc: 'Google reviews',    bg: '#ffcb1f', text: '#543c2d' },
-    { label: 'Pets',          href: '/pets',            icon: 'ti-paw',             desc: 'Team pets',         bg: '#d4436a', text: '#fff' },
   ]},
   { title: 'Culture', items: [
     { label: 'Partners',      href: '/grower',          icon: 'ti-plant',           desc: 'Brand spotlight',   bg: '#543c2d', text: '#f4e6b4' },
     { label: 'Product Reviews', href: '/reviews',        icon: 'ti-message-star',    desc: 'Share your thoughts', bg: '#2d6b9e', text: '#fff' },
-    { label: 'Spotted',       href: '/spotted',         icon: 'ti-eye',             desc: 'Cool finds',        bg: '#e84593', text: '#fff' },
   ]},
   { title: 'Games', items: [
     { label: 'Trivia',        href: '/trivia',        icon: 'ti-brain',            desc: 'Test Your Knowledge', bg: '#c8a84e', text: '#1a2f2a' },

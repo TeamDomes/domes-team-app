@@ -92,11 +92,11 @@ export async function awardPoints(
     if (member && member.role !== 'Lead' && member.role !== 'Admin') {
       const tricklePoints = Math.round(points / 3)
       if (tricklePoints > 0) {
-        // Find all leads
+        // Find all leads & admins
         const { data: leads } = await supabase
           .from('team')
           .select('id')
-          .eq('role', 'Lead')
+          .in('role', ['Lead', 'Admin'])
 
         for (const lead of (leads || [])) {
           await supabase.from('points_log').insert({
