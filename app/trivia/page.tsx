@@ -43,7 +43,7 @@ export default function TriviaPage() {
     setAllAnswers(myAnswers || [])
     const answeredIds = new Set((myAnswers || []).map((a: any) => a.question_id))
     const stats = {
-      correct: (myAnswers || []).filter((a: any) => a.is_correct).length,
+      correct: (myAnswers || []).filter((a: any) => a.was_correct).length,
       total: (myAnswers || []).length
     }
     setTriviaStats(stats)
@@ -51,7 +51,7 @@ export default function TriviaPage() {
     // Count today's answers
     const todayAnswers = (myAnswers || []).filter((a: any) => a.answered_date === today)
     const todayC = todayAnswers.length
-    const todayCor = todayAnswers.filter((a: any) => a.is_correct).length
+    const todayCor = todayAnswers.filter((a: any) => a.was_correct).length
     setTodayCount(todayC)
     setTodayCorrect(todayCor)
 
@@ -62,7 +62,7 @@ export default function TriviaPage() {
 
     // Pick next question — adaptive difficulty
     const recent = (myAnswers || []).sort((a: any, b: any) => b.answered_date.localeCompare(a.answered_date)).slice(0, 5)
-    const recentCorrect = recent.filter((a: any) => a.is_correct).length
+    const recentCorrect = recent.filter((a: any) => a.was_correct).length
     let difficulty = 'Easy'
     if (recentCorrect >= 4) difficulty = 'Hard'
     else if (recentCorrect >= 2) difficulty = 'Medium'
@@ -98,8 +98,9 @@ export default function TriviaPage() {
     await supabase.from('trivia_answers').insert({
       question_id: triviaQ.id,
       team_member_id: teamMember.id,
-      answer: letter,
-      is_correct: correct,
+      answer_submitted: letter,
+      was_correct: correct,
+      points_earned: correct ? POINTS.TRIVIA_CORRECT : POINTS.TRIVIA_WRONG,
       answered_date: new Date().toISOString().split('T')[0],
     })
     setTriviaStats(prev => ({
