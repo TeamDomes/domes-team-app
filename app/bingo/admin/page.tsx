@@ -291,9 +291,14 @@ export default function BingoAdminPage() {
   }
 
   const handleReset = async () => {
-    if (!cycle || !confirm('Log winner, complete this cycle, and start fresh?')) return
-    const w = budtenders.find(b => b.has_bingo)
-    if (w) await supabase.from('bingo_winners').insert({ id:'WIN-'+Date.now(), team_member_id:w.team_member_id, cycle_id:cycle.id, date_won:new Date().toISOString().split('T')[0] })
+    if (!cycle || !confirm('Log winners, complete this cycle, and start fresh?')) return
+    // Record every winner in this cycle (any role), not just the first
+    const { data: winners } = await supabase.from('bingo_squares').select('team_member_id').eq('cycle_id', cycle.id).eq('has_bingo', true)
+    if (winners && winners.length > 0) {
+      const today = new Date().toISOString().split('T')[0]
+      const { error: winErr } = await supabase.from('bingo_winners').insert(winners.map(w => ({ id:'WIN-'+Date.now()+'-'+w.team_member_id, team_member_id:w.team_member_id, cycle_id:cycle.id, date_won:today })))
+      if (winErr) { alert('Could not record winners: ' + winErr.message + ' — cycle NOT reset.'); return }
+    }
     await supabase.from('bingo_cycles').update({ status:'Completed' }).eq('id', cycle.id)
     const nid = 'CYC'+String(Date.now()).slice(-4)
     await supabase.from('bingo_cycles').insert({ id:nid, cycle_start_date:new Date().toISOString().split('T')[0], status:'Active' })
