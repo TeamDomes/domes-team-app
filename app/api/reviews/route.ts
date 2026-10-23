@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { detectStaffMentions, type StaffForMatch } from '@/lib/reviewMentions'
 
 // Use service role key — webhook is called by Zapier (no user session / RLS won't work with anon key)
 const supabase = createClient(
@@ -7,46 +8,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-// Staff first names for auto-detection (active members only)
-async function getStaffNames(): Promise<string[]> {
-  const { data } = await supabase.from('team').select('full_name, is_active')
-  return (data || []).filter((t: any) => t.is_active !== false).map((t: any) => t.full_name.split(' ')[0])
-}
-
-// Levenshtein distance for fuzzy name matching
-function levenshtein(a: string, b: string): number {
-  const m = a.length, n = b.length
-  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) => {
-    const row = new Array(n + 1).fill(0)
-    row[0] = i
-    return row
-  })
-  for (let j = 1; j <= n; j++) dp[0][j] = j
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] = a[i-1] === b[j-1]
-        ? dp[i-1][j-1]
-        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
-    }
-  }
-  return dp[m][n]
-}
-
-function detectStaff(text: string, staffNames: string[]): string[] {
-  if (!text) return []
-  const lower = text.toLowerCase()
-  // Extract words from the review text
-  const words = lower.match(/[a-z]+/g) || []
-  return staffNames.filter(name => {
-    if (name.length < 3) return false
-    const nameLow = name.toLowerCase()
-    // Exact substring match first
-    if (lower.includes(nameLow)) return true
-    // Fuzzy: check each word in the review for close matches (handles Jerrome→Jerome, etc.)
-    // Allow distance of 1 for names 3-5 chars, distance of 2 for names 6+ chars
-    const maxDist = nameLow.length >= 6 ? 2 : 1
-    return words.some(w => Math.abs(w.length - nameLow.length) <= maxDist && levenshtein(w, nameLow) <= maxDist)
-  })
+// Active team members (first_name + aliases) for mention detection
+async function getTeam(): Promise<StaffForMatch[]> {
+  const { data, error } = await supabase.from('team').select('id, first_name, full_name, aliases, is_active')
+  if (error) throw new Error('team lookup failed: ' + error.message)
+  return (data || []) as StaffForMatch[]
 }
 
 /* POST — receive a review from Zapier */
@@ -60,10 +26,11 @@ export async function POST(req: Request) {
     const reviewDate = body.review_date || body.date || body.create_time || new Date().toISOString()
     const googleReviewId = body.google_review_id || body.review_id || null
 
-    const staffNames = await getStaffNames()
-    const mentioned = detectStaff(reviewText, staffNames)
+    const team = await getTeam()
+    const matches = detectStaffMentions(reviewText, team)
+    const mentioned = matches.map(m => m.name)
 
-    const { error } = await supabase.from('google_reviews').insert({
+    const { data: inserted, error } = await supabase.from('google_reviews').insert({
       google_review_id: googleReviewId,
       customer_name: customerName,
       rating,
@@ -71,7 +38,7 @@ export async function POST(req: Request) {
       review_date: reviewDate,
       mentioned_staff: mentioned,
       points_awarded: false,
-    })
+    }).select('id').single()
 
     if (error) {
       // Duplicate review
@@ -82,8 +49,8 @@ export async function POST(req: Request) {
     }
 
     // Award points + mark BINGO O square for mentioned staff (4+ star reviews)
-    if (mentioned.length > 0 && rating >= 4) {
-      const { data: teamData } = await supabase.from('team').select('id, full_name, is_active')
+    if (matches.length > 0 && rating >= 4) {
+      let pointsWritten = false
 
       // Find active BINGO cycle
       const { data: activeCycle } = await supabase
@@ -92,18 +59,16 @@ export async function POST(req: Request) {
         .eq('status', 'Active')
         .limit(1)
 
-      for (const name of mentioned) {
-        const match = (teamData || []).find((t: any) =>
-          t.is_active !== false && t.full_name.split(' ')[0].toLowerCase() === name.toLowerCase()
-        )
-        if (match) {
+      for (const match of matches) {
+        if (match.id) {
           // Award 250 points
-          await supabase.from('points_log').insert({
+          const { error: pointsError } = await supabase.from('points_log').insert({
             team_member_id: match.id,
             points: 250,
             activity: 'google_review_mention',
             source_id: customerName,
           })
+          if (!pointsError) pointsWritten = true
 
           // Mark BINGO O square if cycle is active
           if (activeCycle && activeCycle.length > 0) {
@@ -134,6 +99,10 @@ export async function POST(req: Request) {
             }
           }
         }
+      }
+
+      if (pointsWritten && inserted?.id) {
+        await supabase.from('google_reviews').update({ points_awarded: true }).eq('id', inserted.id)
       }
     }
 

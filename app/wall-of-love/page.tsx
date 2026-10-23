@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { awardPoints } from '@/lib/points'
+import { detectStaffMentions } from '@/lib/reviewMentions'
 import MoodWrapper from '@/components/MoodWrapper'
 
 export default function WallOfLovePage() {
@@ -46,18 +47,9 @@ export default function WallOfLovePage() {
     load()
   }, [router])
 
-  /* Detect staff names in review text */
+  /* Detect staff names in review text (shared rules: whole words, active staff, first_name + aliases) */
   function detectStaff(text: string): string[] {
-    if (!text) return []
-    const lower = text.toLowerCase()
-    const found: string[] = []
-    for (const member of team) {
-      const firstName = (member.full_name || '').split(' ')[0].toLowerCase()
-      if (firstName.length >= 3 && lower.includes(firstName)) {
-        found.push(member.full_name.split(' ')[0])
-      }
-    }
-    return [...new Set(found)]
+    return detectStaffMentions(text, team).map(m => m.name)
   }
 
   /* Admin: manually add a review */
@@ -68,16 +60,17 @@ export default function WallOfLovePage() {
     }
     setSaving(true)
 
-    const mentioned = detectStaff(newReview.review_text)
+    const matches = detectStaffMentions(newReview.review_text, team)
+    const mentioned = matches.map(m => m.name)
 
-    const { error } = await supabase.from('google_reviews').insert({
+    const { data: inserted, error } = await supabase.from('google_reviews').insert({
       customer_name: newReview.customer_name,
       rating: newReview.rating,
       review_text: newReview.review_text,
       review_date: new Date().toISOString(),
       mentioned_staff: mentioned,
-      points_awarded: mentioned.length > 0,
-    })
+      points_awarded: false,
+    }).select('id').single()
 
     if (error) {
       alert('Error saving review: ' + error.message)
@@ -86,7 +79,7 @@ export default function WallOfLovePage() {
     }
 
     // Award points + mark BINGO O square for mentioned staff
-    if (mentioned.length > 0 && newReview.rating >= 4) {
+    if (matches.length > 0 && newReview.rating >= 4) {
       // Find active BINGO cycle
       const { data: activeCycle } = await supabase
         .from('bingo_cycles')
@@ -94,9 +87,8 @@ export default function WallOfLovePage() {
         .eq('status', 'Active')
         .limit(1)
 
-      for (const name of mentioned) {
-        const match = team.find((t: any) => t.full_name.split(' ')[0].toLowerCase() === name.toLowerCase())
-        if (match) {
+      for (const match of matches) {
+        if (match.id) {
           await awardPoints(match.id, 250, 'google_review_mention', newReview.customer_name)
 
           // Mark BINGO O square
@@ -122,6 +114,10 @@ export default function WallOfLovePage() {
             }
           }
         }
+      }
+
+      if (inserted?.id) {
+        await supabase.from('google_reviews').update({ points_awarded: true }).eq('id', inserted.id)
       }
     }
 
