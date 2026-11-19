@@ -37,10 +37,13 @@ function parseVariance(val: any): number {
   return parseFloat(str) || 0
 }
 
-function namesMatch(dbFirst: string, dbFull: string, report: string): boolean {
+function namesMatch(dbFirst: string, dbFull: string, report: string, aliases?: string[] | string | null): boolean {
   const a = (dbFirst || dbFull.split(' ')[0]).toLowerCase()
   const b = report.split(' ')[0].toLowerCase()
-  return a === b || a.startsWith(b) || b.startsWith(a)
+  if (a === b || a.startsWith(b) || b.startsWith(a)) return true
+  // Nicknames (e.g. Samaria appears in Dutchie as "Mari M")
+  const list = Array.isArray(aliases) ? aliases : (aliases ? String(aliases).split(',') : [])
+  return list.some(x => x.trim().toLowerCase() === b)
 }
 
 interface ImportResult { name: string; teamMemberId: string | null; passed: boolean | null; details: string }
@@ -81,7 +84,7 @@ export default function BingoAdminPage() {
       const { data: cyc } = await supabase.from('bingo_cycles').select('*').eq('status', 'Active').single()
       setCycle(cyc)
       if (!cyc) { setLoading(false); return }
-      const { data: sq } = await supabase.from('bingo_squares').select('*, team!inner(id, full_name, first_name, role, type, is_active)').eq('cycle_id', cyc.id).order('team_member_id')
+      const { data: sq } = await supabase.from('bingo_squares').select('*, team!inner(id, full_name, first_name, aliases, role, type, is_active)').eq('cycle_id', cyc.id).order('team_member_id')
       setBudtenders((sq || []).filter((s: any) => s.team?.role === 'Budtender' && s.team?.is_active !== false))
       setLoading(false)
     }
@@ -101,7 +104,7 @@ export default function BingoAdminPage() {
       }
       setPreview({ square: 'square_g', title: 'Attendance Results → G Square', results: budtenders.map(b => {
         const fn = b.team?.full_name||'', fi = b.team?.first_name||''
-        const csv = Array.from(all).find(n => namesMatch(fi, fn, n))
+        const csv = Array.from(all).find(n => namesMatch(fi, fn, n, b.team?.aliases))
         if (!csv) return { name: fn, teamMemberId: b.team_member_id, passed: null, details: 'Not in report' }
         const was = late.has(csv)
         return { name: fn, teamMemberId: b.team_member_id, passed: !was, details: was ? 'Had a late clock-in' : 'On time every shift' }
@@ -149,7 +152,7 @@ export default function BingoAdminPage() {
     }
     setPreview({ square: 'square_n', title: 'Drawer Results → N Square', results: budtenders.map(b => {
       const fn = b.team?.full_name||'', fi = b.team?.first_name||''
-      const mk = Object.keys(daily).find(n => namesMatch(fi, fn, n))
+      const mk = Object.keys(daily).find(n => namesMatch(fi, fn, n, b.team?.aliases))
       if (!mk) return { name: fn, teamMemberId: b.team_member_id, passed: null, details: 'Not in report' }
       const days = daily[mk]; const ok = days.every(d => Math.abs(d.variance) <= 0.50)
       if (ok) return { name: fn, teamMemberId: b.team_member_id, passed: true, details: days.length + ' day(s), all within +/-$0.50' }
@@ -187,7 +190,7 @@ export default function BingoAdminPage() {
       setPreview({ square: 'square_b', title: 'Sales Results → B Square (Big Basket)', results: budtenders.map(b => {
         const fn=b.team?.full_name||'', fi=b.team?.first_name||'', tp=b.team?.type||'FT'
         const need = tp==='PT' ? 3 : 4
-        const mk = Object.keys(counts).find(n => namesMatch(fi, fn, n))
+        const mk = Object.keys(counts).find(n => namesMatch(fi, fn, n, b.team?.aliases))
         if (!mk) return { name: fn, teamMemberId: b.team_member_id, passed: null, details: 'Not in report' }
         const ct = counts[mk]; const ok = ct >= need
         return { name: fn, teamMemberId: b.team_member_id, passed: ok, details: ct+' baskets over $250 ('+tp+' needs '+need+'+)' }
@@ -223,7 +226,7 @@ export default function BingoAdminPage() {
       }
       setPreview({ square: 'square_i', title: 'Upsell Results → I Square (In the Upsell)', results: budtenders.map(b => {
         const fn=b.team?.full_name||'', fi=b.team?.first_name||''
-        const mk = Object.keys(rates).find(n => namesMatch(fi, fn, n))
+        const mk = Object.keys(rates).find(n => namesMatch(fi, fn, n, b.team?.aliases))
         if (!mk) return { name: fn, teamMemberId: b.team_member_id, passed: null, details: 'Not in report' }
         const {rate,u,t} = rates[mk]; const ok = rate >= 10
         return { name: fn, teamMemberId: b.team_member_id, passed: ok, details: rate.toFixed(1)+'% ('+u+'/'+t+' transactions)' }
@@ -285,7 +288,7 @@ export default function BingoAdminPage() {
     }
     setChanges({}); setSaving(false); setMessage('Saved!')
     if (cycle) {
-      const { data } = await supabase.from('bingo_squares').select('*, team!inner(id, full_name, first_name, role, type)').eq('cycle_id', cycle.id).order('team_member_id')
+      const { data } = await supabase.from('bingo_squares').select('*, team!inner(id, full_name, first_name, aliases, role, type)').eq('cycle_id', cycle.id).order('team_member_id')
       setBudtenders((data || []).filter((s: any) => s.team?.role === 'Budtender'))
     }
   }
