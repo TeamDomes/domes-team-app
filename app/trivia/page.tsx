@@ -35,8 +35,12 @@ export default function TriviaPage() {
 
   async function loadTrivia(memberId: string) {
     const today = new Date().toISOString().split('T')[0]
-    const { data: allQs } = await supabase.from('trivia_questions').select('*')
-    if (!allQs || allQs.length === 0) return
+    const { data: rawQs } = await supabase.from('trivia_questions').select('*')
+    // Hide questions about staff who are no longer active
+    const { data: inactive } = await supabase.from('team').select('id').eq('is_active', false)
+    const inactiveIds = new Set((inactive || []).map((t: any) => t.id))
+    const allQs = (rawQs || []).filter((q: any) => !q.source_team_member_id || !inactiveIds.has(q.source_team_member_id))
+    if (allQs.length === 0) return
     setAllQuestions(allQs)
 
     const { data: myAnswers } = await supabase.from('trivia_answers').select('*').eq('team_member_id', memberId)

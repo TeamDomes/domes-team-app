@@ -107,7 +107,7 @@ export default function QuestionnairePage() {
 
   async function generateTrivia() {
     if (!currentUser) return
-    const others = teamMembers.filter(t => t.id !== currentUser.id)
+    const others = teamMembers.filter(t => t.id !== currentUser.id && t.is_active !== false)
     if (others.length < 2) return
     await supabase.from('trivia_questions').delete().eq('source_team_member_id', currentUser.id).eq('category', 'team')
     const newQuestions: any[] = []
