@@ -26,13 +26,14 @@ export default function AppreciationsPage() {
     const { data: th } = await supabase.from('themes').select('*').order('theme_name')
     setThemes(th || [])
     const { data: appr } = await supabase.from('appreciations').select('*').order('created_at', { ascending: false }).range(0, 49)
-    const { data: allTeam } = await supabase.from('team').select('id, full_name')
+    const { data: allTeam } = await supabase.from('team').select('id, full_name, is_active')
     const { data: allThemes } = await supabase.from('themes').select('id, theme_name, theme_icon')
     const teamMap: Record<string, string> = {}
     ;(allTeam || []).forEach((t: any) => { teamMap[t.id] = t.full_name })
     const themeMap: Record<string, any> = {}
     ;(allThemes || []).forEach((t: any) => { themeMap[t.id] = t })
-    setAppreciations((appr || []).map((a: any) => ({ ...a, from_name: teamMap[a.from_team_member_id] || a.from_team_member_id, to_name: teamMap[a.to_team_member_id] || a.to_team_member_id, theme_name: themeMap[a.theme_id]?.theme_name || a.theme_id, theme_icon: themeMap[a.theme_id]?.theme_icon || '' })))
+    const inactiveIds = new Set((allTeam || []).filter((t: any) => t.is_active === false).map((t: any) => t.id))
+    setAppreciations((appr || []).filter((a: any) => !inactiveIds.has(a.from_team_member_id) && !inactiveIds.has(a.to_team_member_id)).map((a: any) => ({ ...a, from_name: teamMap[a.from_team_member_id] || a.from_team_member_id, to_name: teamMap[a.to_team_member_id] || a.to_team_member_id, theme_name: themeMap[a.theme_id]?.theme_name || a.theme_id, theme_icon: themeMap[a.theme_id]?.theme_icon || '' })))
     setLoading(false)
   }
   useEffect(() => { load() }, [router])
